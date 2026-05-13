@@ -61,10 +61,12 @@ async def get_or_create_by_username(username: str) -> dict:
         if row:
             return dict(row) | {"is_new": False}
 
+        import random, time
+        ghost_id = -random.randint(1_000_000, 99_999_999)
         await conn.execute(
             """INSERT INTO users (id, username, balance, debt, language, is_ghost)
-               VALUES (NULL, ?, 1000, 0, 'id', 1)""",
-            (username,),
+               VALUES (?, ?, 1000, 0, 'id', 1) ON CONFLICT(id) DO NOTHING""",
+            (ghost_id, username),
         )
         await conn.commit()
 
@@ -73,6 +75,12 @@ async def get_or_create_by_username(username: str) -> dict:
             (username,),
         ) as cur:
             row = await cur.fetchone()
+
+        if not row:
+            return {"id": 0, "username": username, "balance": 1000, "debt": 0, "language": "id",
+                    "total_lent": 0, "total_collected": 0, "traps_set": 0, "traps_successful": 0,
+                    "daily_streak": 0, "last_daily": None, "bankrupt_count": 0, "is_bankrupt": 0,
+                    "bankruptcy_date": None, "total_daily_claimed": 0, "is_ghost": 1, "is_new": True}
 
         return dict(row) | {"is_new": True}
     finally:
@@ -86,7 +94,7 @@ async def register_user(user_id: int, username: str, language: str = "id") -> di
             """SELECT id, balance, debt, language, total_lent, total_collected,
                traps_set, traps_successful, daily_streak, last_daily,
                bankrupt_count, is_bankrupt, bankruptcy_date, total_daily_claimed
-               FROM users WHERE username = ? AND (id IS NULL OR id != ?)""",
+                FROM users WHERE username = ? AND (id < 0 OR id != ?)""",
             (username, user_id),
         ) as cur:
             ghost = await cur.fetchone()
