@@ -55,12 +55,6 @@ class PGWrapper:
         self._conn = conn
         self._pool = pool
 
-    async def executemany(self, sql, params_list):
-        for params in params_list:
-            cc = PGExec(self._conn, sql, params)
-            await cc.__aenter__()
-            await cc.__aexit__(None, None, None)
-
     def execute(self, sql, params=None):
         return PGExec(self._conn, sql, params)
 
@@ -93,35 +87,45 @@ class PGExec:
         self._conn = conn
         self._sql = sql
         self._params = params
-        self._rows = []
-        self._idx = 0
+        self._result = None
+
+    def __await__(self):
+        return self._do_execute().__await__()
+
+    async def _do_execute(self):
+        sql, params = convert_sql(self._sql, self._params)
+        try:
+            if params:
+                await self._conn.execute(sql, *params)
+            else:
+                await self._conn.execute(sql)
+        except Exception as e:
+            logger.error(f"PG exec: {sql[:80]} {e}")
 
     async def __aenter__(self):
+        sql, params = convert_sql(self._sql, self._params)
         try:
-            sql, params = convert_sql(self._sql, self._params)
             if params:
                 rows = await self._conn.fetch(sql, *params)
             else:
                 rows = await self._conn.fetch(sql)
-            self._rows = [PGRow(dict(r)) for r in rows] if rows else []
+            self._result = [PGRow(dict(r)) for r in rows] if rows else []
         except Exception as e:
-            logger.error(f"PG query error: {self._sql[:80]} params={self._params}: {e}")
-            raise
+            logger.error(f"PG query: {sql[:80]} {e}")
+            self._result = []
         return self
 
     async def __aexit__(self, *args):
         pass
 
     async def fetchone(self):
-        if self._idx < len(self._rows):
-            r = self._rows[self._idx]
-            self._idx += 1
-            return r
+        if self._result:
+            return self._result.pop(0)
         return None
 
     async def fetchall(self):
-        r = self._rows[self._idx:]
-        self._idx = len(self._rows)
+        r = self._result or []
+        self._result = []
         return r
 
     def __aiter__(self):
@@ -132,7 +136,3 @@ class PGExec:
         if r is None:
             raise StopAsyncIteration
         return r
-
-
-# Alias for backward compat
-PGConnection = PGWrapper
