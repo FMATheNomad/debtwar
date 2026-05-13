@@ -17,17 +17,42 @@ async def get_pg_connection():
     return PGWrapper(conn, _pool)
 
 
-class PGRow(dict):
+class PGRow:
+    def __init__(self, data: dict):
+        self._data = data
+        self._keys = list(data.keys())
+
     def __getitem__(self, key):
         if isinstance(key, int):
-            keys = list(self.keys())
-            return self[keys[key]] if key < len(keys) else None
-        return super().__getitem__(key)
+            return self._data[self._keys[key]] if key < len(self._keys) else None
+        return self._data.get(key)
+
+    def __iter__(self):
+        return iter(self._data.values())
+
+    def __len__(self):
+        return len(self._keys)
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def keys(self):
+        return self._data.keys()
+
+    def values(self):
+        return self._data.values()
+
+    def items(self):
+        return self._data.items()
+
+    def __contains__(self, key):
+        return key in self._data
 
 
 _SQL_REPLACEMENTS = [
     (r"datetime\('now',\s*'localtime'\)", "NOW()"),
     (r"MAX\(0,\s*", "GREATEST(0, "),
+    (r"\bMIN\(", "LEAST("),
     (r"changes\(\)", "1"),
     (r"last_insert_rowid\(\)", "lastval()"),
     (r"INSERT OR IGNORE INTO", "INSERT INTO"),
@@ -87,12 +112,13 @@ class PGExec:
         self._conn = conn
         self._sql = sql
         self._params = params
-        self._result = None
+        self._rows = None
+        self._idx = 0
 
     def __await__(self):
-        return self._do_execute().__await__()
+        return self._run().__await__()
 
-    async def _do_execute(self):
+    async def _run(self):
         sql, params = convert_sql(self._sql, self._params)
         try:
             if params:
@@ -109,23 +135,25 @@ class PGExec:
                 rows = await self._conn.fetch(sql, *params)
             else:
                 rows = await self._conn.fetch(sql)
-            self._result = [PGRow(dict(r)) for r in rows] if rows else []
+            self._rows = [PGRow(dict(r)) for r in rows] if rows else []
         except Exception as e:
             logger.error(f"PG query: {sql[:80]} {e}")
-            self._result = []
+            self._rows = []
         return self
 
     async def __aexit__(self, *args):
         pass
 
     async def fetchone(self):
-        if self._result:
-            return self._result.pop(0)
+        if self._rows and self._idx < len(self._rows):
+            r = self._rows[self._idx]
+            self._idx += 1
+            return r
         return None
 
     async def fetchall(self):
-        r = self._result or []
-        self._result = []
+        r = self._rows or []
+        self._rows = None
         return r
 
     def __aiter__(self):
