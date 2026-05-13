@@ -42,17 +42,12 @@ class PGRow:
     def values(self):
         return self._data.values()
 
-    def items(self):
-        return self._data.items()
-
-    def __contains__(self, key):
-        return key in self._data
-
 
 _SQL_REPLACEMENTS = [
     (r"datetime\('now',\s*'localtime'\)", "NOW()"),
-    (r"MAX\(\?,\s*", "GREATEST($1, "),
-    (r"MAX\(\$1,\s*", "GREATEST($1, "),
+    (r"\bMAX\(0\s*,", "GREATEST(0,"),
+    (r"\bMAX\(\?\s*,", "GREATEST($1,"),
+    (r"\bMAX\(\$1\s*,", "GREATEST($1,"),
     (r"\bMIN\(", "LEAST("),
     (r"changes\(\)", "1"),
     (r"last_insert_rowid\(\)", "lastval()"),
@@ -64,15 +59,22 @@ _PARAM_RE = re.compile(r"(?<!\w)\?(?!\w)")
 
 
 def convert_sql(sql: str, params=None):
+    sql_orig = sql
     for pattern, repl in _SQL_REPLACEMENTS:
         sql = re.sub(pattern, repl, sql, flags=re.IGNORECASE)
-    if params and "?" in sql:
+
+    has_params = params and len(params) > 0
+    if has_params and "?" in sql:
         count = 0
         def repl(m):
             nonlocal count
             count += 1
             return f"${count}"
         sql = _PARAM_RE.sub(repl, sql)
+
+    if "INSERT OR IGNORE" in sql_orig and "INSERT INTO" in sql and "ON CONFLICT" not in sql:
+        sql += " ON CONFLICT DO NOTHING"
+
     return sql, params
 
 
@@ -120,17 +122,17 @@ class PGExec:
         return self._run().__await__()
 
     async def _run(self):
-        sql, params = convert_sql(self._sql, self._params)
+        sql, params = self._convert()
         try:
             if params:
                 await self._conn.execute(sql, *params)
             else:
                 await self._conn.execute(sql)
         except Exception as e:
-            logger.error(f"PG exec: {sql[:80]} {e}")
+            logger.error(f"PG exec: {sql[:100]} {e}")
 
     async def __aenter__(self):
-        sql, params = convert_sql(self._sql, self._params)
+        sql, params = self._convert()
         try:
             if params:
                 rows = await self._conn.fetch(sql, *params)
@@ -138,7 +140,7 @@ class PGExec:
                 rows = await self._conn.fetch(sql)
             self._rows = [PGRow(dict(r)) for r in rows] if rows else []
         except Exception as e:
-            logger.error(f"PG query: {sql[:80]} {e}")
+            logger.error(f"PG query: {sql[:100]} {e}")
             self._rows = []
         return self
 
@@ -165,3 +167,6 @@ class PGExec:
         if r is None:
             raise StopAsyncIteration
         return r
+
+    def _convert(self):
+        return convert_sql(self._sql, self._params)

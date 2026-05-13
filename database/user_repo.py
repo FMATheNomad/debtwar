@@ -243,11 +243,11 @@ async def get_leaderboard(category: str, limit: int = 10):
     conn = await get_connection()
     try:
         if category == "richest":
-            query = "SELECT username, COALESCE(display_name, username) as display_name, MAX(balance) as balance FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY balance DESC LIMIT ?"
+            query = "SELECT username, MAX(display_name) as display_name, MAX(balance) as balance FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY balance DESC LIMIT ?"
         elif category == "debt":
-            query = "SELECT username, COALESCE(display_name, username) as display_name, MAX(debt) as debt FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY debt DESC LIMIT ?"
+            query = "SELECT username, MAX(display_name) as display_name, MAX(debt) as debt FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY debt DESC LIMIT ?"
         elif category == "chaos":
-            query = """SELECT username, COALESCE(display_name, username) as display_name,
+            query = """SELECT username, MAX(display_name) as display_name,
                        MAX(traps_set + total_lent/100 + total_collected/100) as chaos_score
                        FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY chaos_score DESC LIMIT ?"""
         else:
@@ -366,7 +366,8 @@ async def get_achievement_count_by_username(username: str) -> int:
 async def get_leaderboard_chaos_detail(limit: int = 10) -> list:
     conn = await get_connection()
     try:
-        query = """SELECT username, MAX(balance) as balance, MAX(debt) as debt,
+        query = """SELECT username,
+                   MAX(balance) as balance, MAX(debt) as debt,
                    MAX(total_lent) as total_lent, MAX(total_collected) as total_collected,
                    MAX(traps_set) as traps_set, MAX(traps_successful) as traps_successful,
                    MAX(traps_set + total_lent/100 + total_collected/100) as chaos_score
