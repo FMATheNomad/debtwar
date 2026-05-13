@@ -361,7 +361,23 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT,
     balance  INTEGER DEFAULT 1000,
     debt     INTEGER DEFAULT 0,
-    language TEXT DEFAULT 'id'
+    language TEXT DEFAULT 'id',
+    total_lent INTEGER DEFAULT 0,
+    total_collected INTEGER DEFAULT 0,
+    traps_set INTEGER DEFAULT 0,
+    traps_successful INTEGER DEFAULT 0,
+    daily_streak INTEGER DEFAULT 0,
+    last_daily TEXT,
+    bankrupt_count INTEGER DEFAULT 0,
+    is_bankrupt INTEGER DEFAULT 0,
+    bankruptcy_date TEXT,
+    total_daily_claimed INTEGER DEFAULT 0,
+    is_ghost INTEGER DEFAULT 0,
+    credit_score INTEGER DEFAULT 500,
+    total_repaid INTEGER DEFAULT 0,
+    total_defaulted INTEGER DEFAULT 0,
+    display_name TEXT,
+    needs_name INTEGER DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS transactions (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -434,7 +450,13 @@ CREATE TABLE IF NOT EXISTS casino_stats (
     total_lost    INTEGER DEFAULT 0,
     slot_plays    INTEGER DEFAULT 0,
     blackjack_plays INTEGER DEFAULT 0,
-    roulette_plays INTEGER DEFAULT 0
+    roulette_plays INTEGER DEFAULT 0,
+    slot_wins INTEGER DEFAULT 0,
+    slot_losses INTEGER DEFAULT 0,
+    blackjack_wins INTEGER DEFAULT 0,
+    blackjack_losses INTEGER DEFAULT 0,
+    roulette_wins INTEGER DEFAULT 0,
+    roulette_losses INTEGER DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS titles (
     id              TEXT PRIMARY KEY,
