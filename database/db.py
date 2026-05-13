@@ -1,11 +1,22 @@
+import os
 import aiosqlite
 import logging
 from config import DB_FILE
 
 logger = logging.getLogger(__name__)
 
+DB_BACKEND = os.getenv("DB_BACKEND", "postgres" if os.getenv("DATABASE_URL") else "sqlite")
+
 
 async def get_connection():
+    if DB_BACKEND == "postgres":
+        from database.pg import PGWrapper, PGRow
+        import asyncpg
+        pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"), min_size=1, max_size=10)
+        conn = await pool.acquire()
+        wrapper = PGWrapper(conn, pool)
+        wrapper.row_factory = PGRow
+        return wrapper
     conn = await aiosqlite.connect(DB_FILE)
     conn.row_factory = aiosqlite.Row
     await conn.execute("PRAGMA journal_mode=WAL")
@@ -16,322 +27,291 @@ async def get_connection():
 async def init_db():
     conn = await get_connection()
     try:
-        await conn.executescript("""
-            CREATE TABLE IF NOT EXISTS users (
-                id       INTEGER PRIMARY KEY,
-                username TEXT,
-                balance  INTEGER DEFAULT 1000,
-                debt     INTEGER DEFAULT 0,
-                language TEXT DEFAULT 'id'
-            );
+        if DB_BACKEND == "postgres":
+            sql = """
+CREATE TABLE IF NOT EXISTS users (
+    id       BIGINT PRIMARY KEY,
+    username TEXT,
+    balance  INTEGER DEFAULT 1000,
+    debt     INTEGER DEFAULT 0,
+    language TEXT DEFAULT 'id',
+    total_lent INTEGER DEFAULT 0,
+    total_collected INTEGER DEFAULT 0,
+    traps_set INTEGER DEFAULT 0,
+    traps_successful INTEGER DEFAULT 0,
+    daily_streak INTEGER DEFAULT 0,
+    last_daily TEXT,
+    bankrupt_count INTEGER DEFAULT 0,
+    is_bankrupt INTEGER DEFAULT 0,
+    bankruptcy_date TEXT,
+    total_daily_claimed INTEGER DEFAULT 0,
+    is_ghost INTEGER DEFAULT 0,
+    credit_score INTEGER DEFAULT 500,
+    total_repaid INTEGER DEFAULT 0,
+    total_defaulted INTEGER DEFAULT 0,
+    display_name TEXT,
+    needs_name INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS transactions (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                from_id   INTEGER,
-                to_user   TEXT,
-                type      TEXT,
-                amount    INTEGER,
-                timestamp TEXT DEFAULT (datetime('now', 'localtime'))
-            );
+CREATE TABLE IF NOT EXISTS transactions (
+    id        SERIAL PRIMARY KEY,
+    from_id   BIGINT,
+    to_user   TEXT,
+    type      TEXT,
+    amount    INTEGER,
+    timestamp TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS daily_limits (
-                user_id        INTEGER,
-                date           TEXT,
-                total_lent     INTEGER DEFAULT 0,
-                total_transfer INTEGER DEFAULT 0,
-                PRIMARY KEY (user_id, date)
-            );
+CREATE TABLE IF NOT EXISTS daily_limits (
+    user_id        BIGINT,
+    date           TEXT,
+    total_lent     INTEGER DEFAULT 0,
+    total_transfer INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, date)
+);
 
-            CREATE TABLE IF NOT EXISTS achievements (
-                user_id   INTEGER,
-                ach_id    TEXT,
-                unlocked  TEXT DEFAULT (datetime('now', 'localtime')),
-                PRIMARY KEY (user_id, ach_id)
-            );
+CREATE TABLE IF NOT EXISTS achievements (
+    user_id   BIGINT,
+    ach_id    TEXT,
+    unlocked  TEXT DEFAULT NOW(),
+    PRIMARY KEY (user_id, ach_id)
+);
 
-            CREATE TABLE IF NOT EXISTS ghost_notifications (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                target_user TEXT NOT NULL,
-                from_name   TEXT,
-                action_type TEXT,
-                amount      INTEGER DEFAULT 0,
-                detail      TEXT,
-                timestamp   TEXT DEFAULT (datetime('now', 'localtime'))
-            );
+CREATE TABLE IF NOT EXISTS ghost_notifications (
+    id          SERIAL PRIMARY KEY,
+    target_user TEXT NOT NULL,
+    from_name   TEXT,
+    action_type TEXT,
+    amount      INTEGER DEFAULT 0,
+    detail      TEXT,
+    timestamp   TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS gangs (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                name        TEXT UNIQUE,
-                owner_id    INTEGER,
-                reputation  INTEGER DEFAULT 0,
-                vault_balance INTEGER DEFAULT 0,
-                member_count INTEGER DEFAULT 1,
-                created_at  TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (owner_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS gangs (
+    id          SERIAL PRIMARY KEY,
+    name        TEXT UNIQUE,
+    owner_id    BIGINT,
+    reputation  INTEGER DEFAULT 0,
+    vault_balance INTEGER DEFAULT 0,
+    member_count INTEGER DEFAULT 1,
+    created_at  TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS gang_members (
-                gang_id   INTEGER,
-                user_id   INTEGER,
-                role      TEXT DEFAULT 'member',
-                joined_at TEXT DEFAULT (datetime('now', 'localtime')),
-                PRIMARY KEY (gang_id, user_id),
-                FOREIGN KEY (gang_id) REFERENCES gangs(id),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS gang_members (
+    gang_id   INTEGER,
+    user_id   BIGINT,
+    role      TEXT DEFAULT 'member',
+    joined_at TEXT DEFAULT NOW(),
+    PRIMARY KEY (gang_id, user_id)
+);
 
-            CREATE TABLE IF NOT EXISTS gang_wars (
-                id                INTEGER PRIMARY KEY AUTOINCREMENT,
-                attacker_gang_id  INTEGER,
-                defender_gang_id  INTEGER,
-                status            TEXT DEFAULT 'declared',
-                attacker_score    INTEGER DEFAULT 0,
-                defender_score    INTEGER DEFAULT 0,
-                winner_id         INTEGER,
-                started_at        TEXT DEFAULT (datetime('now', 'localtime')),
-                ended_at          TEXT,
-                FOREIGN KEY (attacker_gang_id) REFERENCES gangs(id),
-                FOREIGN KEY (defender_gang_id) REFERENCES gangs(id)
-            );
+CREATE TABLE IF NOT EXISTS gang_wars (
+    id                SERIAL PRIMARY KEY,
+    attacker_gang_id  INTEGER,
+    defender_gang_id  INTEGER,
+    status            TEXT DEFAULT 'declared',
+    attacker_score    INTEGER DEFAULT 0,
+    defender_score    INTEGER DEFAULT 0,
+    winner_id         INTEGER,
+    started_at        TEXT DEFAULT NOW(),
+    ended_at          TEXT
+);
 
-            CREATE TABLE IF NOT EXISTS bank_accounts (
-                user_id         INTEGER PRIMARY KEY,
-                balance         INTEGER DEFAULT 0,
-                last_interest   TEXT,
-                total_deposited INTEGER DEFAULT 0,
-                total_withdrawn INTEGER DEFAULT 0,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS bank_accounts (
+    user_id         BIGINT PRIMARY KEY,
+    balance         INTEGER DEFAULT 0,
+    last_interest   TEXT,
+    total_deposited INTEGER DEFAULT 0,
+    total_withdrawn INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS casino_stats (
-                user_id       INTEGER PRIMARY KEY,
-                total_bet     INTEGER DEFAULT 0,
-                total_won     INTEGER DEFAULT 0,
-                total_lost    INTEGER DEFAULT 0,
-                slot_plays    INTEGER DEFAULT 0,
-                blackjack_plays INTEGER DEFAULT 0,
-                roulette_plays INTEGER DEFAULT 0,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS casino_stats (
+    user_id       BIGINT PRIMARY KEY,
+    total_bet     INTEGER DEFAULT 0,
+    total_won     INTEGER DEFAULT 0,
+    total_lost    INTEGER DEFAULT 0,
+    slot_plays    INTEGER DEFAULT 0,
+    blackjack_plays INTEGER DEFAULT 0,
+    roulette_plays INTEGER DEFAULT 0,
+    slot_wins INTEGER DEFAULT 0,
+    slot_losses INTEGER DEFAULT 0,
+    blackjack_wins INTEGER DEFAULT 0,
+    blackjack_losses INTEGER DEFAULT 0,
+    roulette_wins INTEGER DEFAULT 0,
+    roulette_losses INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS titles (
-                id              TEXT PRIMARY KEY,
-                name            TEXT,
-                description     TEXT,
-                min_credit_score INTEGER DEFAULT 0,
-                min_chaos       INTEGER DEFAULT 0
-            );
+CREATE TABLE IF NOT EXISTS titles (
+    id              TEXT PRIMARY KEY,
+    name            TEXT,
+    description     TEXT,
+    min_credit_score INTEGER DEFAULT 0,
+    min_chaos       INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS user_titles (
-                user_id    INTEGER,
-                title_id   TEXT,
-                unlocked_at TEXT DEFAULT (datetime('now', 'localtime')),
-                is_active  INTEGER DEFAULT 0,
-                PRIMARY KEY (user_id, title_id),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS user_titles (
+    user_id    BIGINT,
+    title_id   TEXT,
+    unlocked_at TEXT DEFAULT NOW(),
+    is_active  INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, title_id)
+);
 
-            CREATE TABLE IF NOT EXISTS stats_history (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER,
-                stat_type  TEXT,
-                stat_value INTEGER,
-                recorded_at TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS stats_history (
+    id         SERIAL PRIMARY KEY,
+    user_id    BIGINT,
+    stat_type  TEXT,
+    stat_value INTEGER,
+    recorded_at TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS wanted_list (
-                user_id       INTEGER PRIMARY KEY,
-                bounty        INTEGER DEFAULT 0,
-                wanted_level  INTEGER DEFAULT 1,
-                total_crimes  INTEGER DEFAULT 0,
-                updated_at    TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS wanted_list (
+    user_id       BIGINT PRIMARY KEY,
+    bounty        INTEGER DEFAULT 0,
+    wanted_level  INTEGER DEFAULT 1,
+    total_crimes  INTEGER DEFAULT 0,
+    updated_at    TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS spy_logs (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                spy_id     INTEGER,
-                target_id  INTEGER,
-                success    INTEGER,
-                detected   INTEGER DEFAULT 0,
-                timestamp  TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (spy_id) REFERENCES users(id),
-                FOREIGN KEY (target_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS spy_logs (
+    id         SERIAL PRIMARY KEY,
+    spy_id     BIGINT,
+    target_id  BIGINT,
+    success    INTEGER,
+    detected   INTEGER DEFAULT 0,
+    timestamp  TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS sabotage_logs (
-                id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                attacker_id   INTEGER,
-                target_id     INTEGER,
-                sabotage_type TEXT,
-                success       INTEGER,
-                amount        INTEGER DEFAULT 0,
-                timestamp     TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (attacker_id) REFERENCES users(id),
-                FOREIGN KEY (target_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS sabotage_logs (
+    id            SERIAL PRIMARY KEY,
+    attacker_id   BIGINT,
+    target_id     BIGINT,
+    sabotage_type TEXT,
+    success       INTEGER,
+    amount        INTEGER DEFAULT 0,
+    timestamp     TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS market_items (
-                id             TEXT PRIMARY KEY,
-                name           TEXT,
-                description    TEXT,
-                price          INTEGER,
-                item_type      TEXT,
-                effect_value   REAL DEFAULT 0,
-                duration_hours INTEGER DEFAULT 0,
-                effect         TEXT
-            );
+CREATE TABLE IF NOT EXISTS market_items (
+    id             TEXT PRIMARY KEY,
+    name           TEXT,
+    description    TEXT,
+    price          INTEGER,
+    item_type      TEXT,
+    effect_value   REAL DEFAULT 0,
+    duration_hours INTEGER DEFAULT 0,
+    effect         TEXT
+);
 
-            CREATE TABLE IF NOT EXISTS user_items (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER,
-                item_id    TEXT,
-                quantity   INTEGER DEFAULT 1,
-                expires_at TEXT,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS user_items (
+    id         SERIAL PRIMARY KEY,
+    user_id    BIGINT,
+    item_id    TEXT,
+    quantity   INTEGER DEFAULT 1,
+    expires_at TEXT
+);
 
-            CREATE TABLE IF NOT EXISTS active_shields (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id     INTEGER,
-                shield_type TEXT,
-                expires_at  TEXT,
-                durability  INTEGER DEFAULT 1,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS active_shields (
+    id          SERIAL PRIMARY KEY,
+    user_id     BIGINT,
+    shield_type TEXT,
+    expires_at  TEXT,
+    durability  INTEGER DEFAULT 1
+);
 
-            CREATE TABLE IF NOT EXISTS seasons (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                name       TEXT,
-                started_at TEXT,
-                ended_at   TEXT,
-                is_active  INTEGER DEFAULT 0
-            );
+CREATE TABLE IF NOT EXISTS seasons (
+    id         SERIAL PRIMARY KEY,
+    name       TEXT,
+    started_at TEXT,
+    ended_at   TEXT,
+    is_active  INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS season_leaderboard (
-                season_id INTEGER,
-                user_id   INTEGER,
-                score     INTEGER DEFAULT 0,
-                rank      INTEGER,
-                PRIMARY KEY (season_id, user_id),
-                FOREIGN KEY (season_id) REFERENCES seasons(id),
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS season_leaderboard (
+    season_id INTEGER,
+    user_id   BIGINT,
+    score     INTEGER DEFAULT 0,
+    rank      INTEGER,
+    PRIMARY KEY (season_id, user_id)
+);
 
-            CREATE TABLE IF NOT EXISTS court_cases (
-                id             INTEGER PRIMARY KEY AUTOINCREMENT,
-                plaintiff_id   INTEGER,
-                defendant_id   INTEGER,
-                charge         TEXT,
-                status         TEXT DEFAULT 'pending',
-                verdict        TEXT,
-                fine_amount    INTEGER DEFAULT 0,
-                created_at     TEXT DEFAULT (datetime('now', 'localtime')),
-                FOREIGN KEY (plaintiff_id) REFERENCES users(id),
-                FOREIGN KEY (defendant_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS court_cases (
+    id             SERIAL PRIMARY KEY,
+    plaintiff_id   BIGINT,
+    defendant_id   BIGINT,
+    charge         TEXT,
+    status         TEXT DEFAULT 'pending',
+    verdict        TEXT,
+    fine_amount    INTEGER DEFAULT 0,
+    created_at     TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS court_votes (
-                case_id  INTEGER,
-                voter_id INTEGER,
-                vote     TEXT,
-                PRIMARY KEY (case_id, voter_id),
-                FOREIGN KEY (case_id) REFERENCES court_cases(id),
-                FOREIGN KEY (voter_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS court_votes (
+    case_id  INTEGER,
+    voter_id BIGINT,
+    vote     TEXT,
+    PRIMARY KEY (case_id, voter_id)
+);
 
-            CREATE TABLE IF NOT EXISTS npc_interactions (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id    INTEGER,
-                npc_type   TEXT,
-                action     TEXT,
-                reward     INTEGER DEFAULT 0,
-                timestamp  TEXT DEFAULT (datetime('now', 'localtime'))
-            );
+CREATE TABLE IF NOT EXISTS npc_interactions (
+    id         SERIAL PRIMARY KEY,
+    user_id    BIGINT,
+    npc_type   TEXT,
+    action     TEXT,
+    reward     INTEGER DEFAULT 0,
+    timestamp  TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS trap_types (
-                id               TEXT PRIMARY KEY,
-                name             TEXT,
-                success_rate     REAL DEFAULT 0.3,
-                min_damage       INTEGER DEFAULT 50,
-                max_damage       INTEGER DEFAULT 200,
-                cooldown_seconds INTEGER DEFAULT 300,
-                min_level        INTEGER DEFAULT 1,
-                cost             INTEGER DEFAULT 0
-            );
+CREATE TABLE IF NOT EXISTS trap_types (
+    id               TEXT PRIMARY KEY,
+    name             TEXT,
+    success_rate     REAL DEFAULT 0.3,
+    min_damage       INTEGER DEFAULT 50,
+    max_damage       INTEGER DEFAULT 200,
+    cooldown_seconds INTEGER DEFAULT 300,
+    min_level        INTEGER DEFAULT 1,
+    cost             INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS drama_log (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                drama_text TEXT,
-                created_at TEXT DEFAULT (datetime('now', 'localtime'))
-            );
+CREATE TABLE IF NOT EXISTS drama_log (
+    id         SERIAL PRIMARY KEY,
+    drama_text TEXT,
+    created_at TEXT DEFAULT NOW()
+);
 
-            CREATE TABLE IF NOT EXISTS world_events (
-                id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_type  TEXT,
-                title       TEXT,
-                description TEXT,
-                multiplier  REAL DEFAULT 1.0,
-                started_at  TEXT,
-                ended_at    TEXT,
-                is_active   INTEGER DEFAULT 0
-            );
+CREATE TABLE IF NOT EXISTS world_events (
+    id          SERIAL PRIMARY KEY,
+    event_type  TEXT,
+    title       TEXT,
+    description TEXT,
+    multiplier  REAL DEFAULT 1.0,
+    started_at  TEXT,
+    ended_at    TEXT,
+    is_active   INTEGER DEFAULT 0
+);
 
-            CREATE TABLE IF NOT EXISTS lootbox_inventory (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id      INTEGER,
-                lootbox_type TEXT,
-                quantity     INTEGER DEFAULT 1,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
+CREATE TABLE IF NOT EXISTS lootbox_inventory (
+    id           SERIAL PRIMARY KEY,
+    user_id      BIGINT,
+    lootbox_type TEXT,
+    quantity     INTEGER DEFAULT 1
+);
 
-            CREATE TABLE IF NOT EXISTS lootbox_rewards (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id      INTEGER,
-                reward_type  TEXT,
-                reward_value INTEGER DEFAULT 0,
-                rarity       TEXT,
-                opened_at    TEXT DEFAULT (datetime('now', 'localtime'))
-            );
-        """)
+CREATE TABLE IF NOT EXISTS lootbox_rewards (
+    id           SERIAL PRIMARY KEY,
+    user_id      BIGINT,
+    reward_type  TEXT,
+    reward_value INTEGER DEFAULT 0,
+    rarity       TEXT,
+    opened_at    TEXT DEFAULT NOW()
+);
+"""
+        else:
+            sql = SQLITE_SCHEMA
+        await conn.executescript(sql)
         await conn.commit()
-
-        migrations = [
-            "ALTER TABLE users ADD COLUMN total_lent INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN total_collected INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN traps_set INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN traps_successful INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN daily_streak INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN last_daily TEXT",
-            "ALTER TABLE users ADD COLUMN bankrupt_count INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN is_bankrupt INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN bankruptcy_date TEXT",
-            "ALTER TABLE users ADD COLUMN total_daily_claimed INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN is_ghost INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN credit_score INTEGER DEFAULT 500",
-            "ALTER TABLE users ADD COLUMN total_repaid INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN total_defaulted INTEGER DEFAULT 0",
-            "ALTER TABLE users ADD COLUMN display_name TEXT",
-            "ALTER TABLE users ADD COLUMN needs_name INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN slot_wins INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN slot_losses INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN blackjack_wins INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN blackjack_losses INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN roulette_wins INTEGER DEFAULT 0",
-            "ALTER TABLE casino_stats ADD COLUMN roulette_losses INTEGER DEFAULT 0",
-        ]
-        for migration in migrations:
-            col_name = migration.split()[5]
-            try:
-                await conn.execute(migration)
-                await conn.commit()
-                logger.info(f"Migration: column '{col_name}' added")
-            except Exception:
-                pass
-
         await seed_default_data(conn)
-        logger.info("Database initialized successfully")
+        logger.info(f"Database initialized ({DB_BACKEND})")
     except Exception as e:
         logger.error(f"Database init error: {e}")
         raise
@@ -343,18 +323,18 @@ async def seed_default_data(conn):
     from config import TITLES, MARKET_ITEMS
     for tid, tdata in TITLES.items():
         try:
-            await conn.execute(
-                "INSERT OR IGNORE INTO titles (id, name, min_credit_score, min_chaos) VALUES (?, ?, ?, ?)",
-                (tid, tdata["name"], tdata["min_credit"], tdata["min_chaos"]),
-            )
+            if DB_BACKEND == "postgres":
+                await conn.execute("INSERT INTO titles (id, name, min_credit_score, min_chaos) VALUES ($1, $2, $3, $4) ON CONFLICT(id) DO NOTHING", (tid, tdata["name"], tdata["min_credit"], tdata["min_chaos"]))
+            else:
+                await conn.execute("INSERT OR IGNORE INTO titles (id, name, min_credit_score, min_chaos) VALUES (?, ?, ?, ?)", (tid, tdata["name"], tdata["min_credit"], tdata["min_chaos"]))
         except Exception:
             pass
     for mid, mdata in MARKET_ITEMS.items():
         try:
-            await conn.execute(
-                "INSERT OR IGNORE INTO market_items (id, name, price, item_type, effect_value, duration_hours, effect) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (mid, mdata["name"], mdata["price"], mdata["type"], mdata.get("effect_value", 0), mdata.get("duration_hours", 0), mdata.get("effect", "")),
-            )
+            if DB_BACKEND == "postgres":
+                await conn.execute("INSERT INTO market_items (id, name, price, item_type, effect_value, duration_hours, effect) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT(id) DO NOTHING", (mid, mdata["name"], mdata["price"], mdata["type"], mdata.get("effect_value", 0), mdata.get("duration_hours", 0), mdata.get("effect", "")))
+            else:
+                await conn.execute("INSERT OR IGNORE INTO market_items (id, name, price, item_type, effect_value, duration_hours, effect) VALUES (?, ?, ?, ?, ?, ?, ?)", (mid, mdata["name"], mdata["price"], mdata["type"], mdata.get("effect_value", 0), mdata.get("duration_hours", 0), mdata.get("effect", "")))
         except Exception:
             pass
     trap_seeds = [
@@ -366,10 +346,240 @@ async def seed_default_data(conn):
     ]
     for ts in trap_seeds:
         try:
-            await conn.execute(
-                "INSERT OR IGNORE INTO trap_types (id, name, success_rate, min_damage, max_damage, cooldown_seconds, min_level, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ts,
-            )
+            if DB_BACKEND == "postgres":
+                await conn.execute("INSERT INTO trap_types (id, name, success_rate, min_damage, max_damage, cooldown_seconds, min_level, cost) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(id) DO NOTHING", ts)
+            else:
+                await conn.execute("INSERT OR IGNORE INTO trap_types (id, name, success_rate, min_damage, max_damage, cooldown_seconds, min_level, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", ts)
         except Exception:
             pass
     await conn.commit()
+
+
+SQLITE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+    id       INTEGER PRIMARY KEY,
+    username TEXT,
+    balance  INTEGER DEFAULT 1000,
+    debt     INTEGER DEFAULT 0,
+    language TEXT DEFAULT 'id'
+);
+CREATE TABLE IF NOT EXISTS transactions (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_id   INTEGER,
+    to_user   TEXT,
+    type      TEXT,
+    amount    INTEGER,
+    timestamp TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS daily_limits (
+    user_id        INTEGER,
+    date           TEXT,
+    total_lent     INTEGER DEFAULT 0,
+    total_transfer INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, date)
+);
+CREATE TABLE IF NOT EXISTS achievements (
+    user_id   INTEGER,
+    ach_id    TEXT,
+    unlocked  TEXT DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (user_id, ach_id)
+);
+CREATE TABLE IF NOT EXISTS ghost_notifications (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    target_user TEXT NOT NULL,
+    from_name   TEXT,
+    action_type TEXT,
+    amount      INTEGER DEFAULT 0,
+    detail      TEXT,
+    timestamp   TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS gangs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT UNIQUE,
+    owner_id    INTEGER,
+    reputation  INTEGER DEFAULT 0,
+    vault_balance INTEGER DEFAULT 0,
+    member_count INTEGER DEFAULT 1,
+    created_at  TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS gang_members (
+    gang_id   INTEGER,
+    user_id   INTEGER,
+    role      TEXT DEFAULT 'member',
+    joined_at TEXT DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (gang_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS gang_wars (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    attacker_gang_id  INTEGER,
+    defender_gang_id  INTEGER,
+    status            TEXT DEFAULT 'declared',
+    attacker_score    INTEGER DEFAULT 0,
+    defender_score    INTEGER DEFAULT 0,
+    winner_id         INTEGER,
+    started_at        TEXT DEFAULT (datetime('now', 'localtime')),
+    ended_at          TEXT
+);
+CREATE TABLE IF NOT EXISTS bank_accounts (
+    user_id         INTEGER PRIMARY KEY,
+    balance         INTEGER DEFAULT 0,
+    last_interest   TEXT,
+    total_deposited INTEGER DEFAULT 0,
+    total_withdrawn INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS casino_stats (
+    user_id       INTEGER PRIMARY KEY,
+    total_bet     INTEGER DEFAULT 0,
+    total_won     INTEGER DEFAULT 0,
+    total_lost    INTEGER DEFAULT 0,
+    slot_plays    INTEGER DEFAULT 0,
+    blackjack_plays INTEGER DEFAULT 0,
+    roulette_plays INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS titles (
+    id              TEXT PRIMARY KEY,
+    name            TEXT,
+    description     TEXT,
+    min_credit_score INTEGER DEFAULT 0,
+    min_chaos       INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS user_titles (
+    user_id    INTEGER,
+    title_id   TEXT,
+    unlocked_at TEXT DEFAULT (datetime('now', 'localtime')),
+    is_active  INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, title_id)
+);
+CREATE TABLE IF NOT EXISTS stats_history (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER,
+    stat_type  TEXT,
+    stat_value INTEGER,
+    recorded_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS wanted_list (
+    user_id       INTEGER PRIMARY KEY,
+    bounty        INTEGER DEFAULT 0,
+    wanted_level  INTEGER DEFAULT 1,
+    total_crimes  INTEGER DEFAULT 0,
+    updated_at    TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS spy_logs (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    spy_id     INTEGER,
+    target_id  INTEGER,
+    success    INTEGER,
+    detected   INTEGER DEFAULT 0,
+    timestamp  TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS sabotage_logs (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    attacker_id   INTEGER,
+    target_id     INTEGER,
+    sabotage_type TEXT,
+    success       INTEGER,
+    amount        INTEGER DEFAULT 0,
+    timestamp     TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS market_items (
+    id             TEXT PRIMARY KEY,
+    name           TEXT,
+    description    TEXT,
+    price          INTEGER,
+    item_type      TEXT,
+    effect_value   REAL DEFAULT 0,
+    duration_hours INTEGER DEFAULT 0,
+    effect         TEXT
+);
+CREATE TABLE IF NOT EXISTS user_items (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER,
+    item_id    TEXT,
+    quantity   INTEGER DEFAULT 1,
+    expires_at TEXT
+);
+CREATE TABLE IF NOT EXISTS active_shields (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER,
+    shield_type TEXT,
+    expires_at  TEXT,
+    durability  INTEGER DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS seasons (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT,
+    started_at TEXT,
+    ended_at   TEXT,
+    is_active  INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS season_leaderboard (
+    season_id INTEGER,
+    user_id   INTEGER,
+    score     INTEGER DEFAULT 0,
+    rank      INTEGER,
+    PRIMARY KEY (season_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS court_cases (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    plaintiff_id   INTEGER,
+    defendant_id   INTEGER,
+    charge         TEXT,
+    status         TEXT DEFAULT 'pending',
+    verdict        TEXT,
+    fine_amount    INTEGER DEFAULT 0,
+    created_at     TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS court_votes (
+    case_id  INTEGER,
+    voter_id INTEGER,
+    vote     TEXT,
+    PRIMARY KEY (case_id, voter_id)
+);
+CREATE TABLE IF NOT EXISTS npc_interactions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER,
+    npc_type   TEXT,
+    action     TEXT,
+    reward     INTEGER DEFAULT 0,
+    timestamp  TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS trap_types (
+    id               TEXT PRIMARY KEY,
+    name             TEXT,
+    success_rate     REAL DEFAULT 0.3,
+    min_damage       INTEGER DEFAULT 50,
+    max_damage       INTEGER DEFAULT 200,
+    cooldown_seconds INTEGER DEFAULT 300,
+    min_level        INTEGER DEFAULT 1,
+    cost             INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS drama_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    drama_text TEXT,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS world_events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type  TEXT,
+    title       TEXT,
+    description TEXT,
+    multiplier  REAL DEFAULT 1.0,
+    started_at  TEXT,
+    ended_at    TEXT,
+    is_active   INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS lootbox_inventory (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER,
+    lootbox_type TEXT,
+    quantity     INTEGER DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS lootbox_rewards (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER,
+    reward_type  TEXT,
+    reward_value INTEGER DEFAULT 0,
+    rarity       TEXT,
+    opened_at    TEXT DEFAULT (datetime('now', 'localtime'))
+);
+"""
