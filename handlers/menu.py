@@ -299,7 +299,14 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif data == "chaos_spy":
             _push_nav(context, "menu_chaos")
             await query.edit_message_text(
-                "🕵️ Gunakan: /spy @username\nBiaya: 100💰",
+                "🕵️ *Spy System*\n\n"
+                "Lihat estimasi saldo & utang target.\n\n"
+                "• Biaya: *Rp100*\n"
+                "• Cooldown: 2 menit\n"
+                "• Success rate: 70%\n"
+                "• Gagal: kena denda Rp50\n"
+                "• Terdeteksi: target dapat notifikasi\n\n"
+                "Gunakan: `/spy @username`",
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
             )
@@ -307,7 +314,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif data == "chaos_sabo":
             _push_nav(context, "menu_chaos")
             await query.edit_message_text(
-                "💣 Gunakan: /sabotage <type> @username\nTipe: freeze, steal, block_daily",
+                "💣 *Sabotage System*\n\n"
+                "Tipe:\n"
+                "• `freeze` — freeze akun target 1 jam\n"
+                "• `steal` — curi saldo target (Rp20-100)\n"
+                "• `block_daily` — block daily reward target\n\n"
+                "• Biaya: *Rp150*\n"
+                "• Cooldown: 5 menit\n"
+                "• Success rate: 55%\n"
+                "• Gagal: kena denda Rp80\n\n"
+                "Gunakan: `/sabotage <type> @username`",
+                parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
             )
 
@@ -335,12 +352,12 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from utils.disclaimer import LOOTBOX_DISCLAIMER
             await query.edit_message_text(
                 "🎁 *Lootbox System*\n\n"
-                "Buka lootbox untuk dapat hadiah random!\n"
-                "• /lootbox buy common — 200 coins\n"
-                "• /lootbox buy rare — 500 coins\n"
-                "• /lootbox buy epic — 1200 coins\n"
-                "• /lootbox buy legendary — 3000 coins\n"
-                "• /lootbox open <rarity> — buka lootbox\n"
+                "Buka lootbox untuk dapat hadiah random!\n\n"
+                "• Common — Rp200 (uang, debt bomb)\n"
+                "• Rare — Rp500 (uang, shield)\n"
+                "• Epic — Rp1200 (uang besar, chaos buff)\n"
+                "• Legendary — Rp3000 (uang gede, title unlock)\n\n"
+                "Gunakan:\n/lootbox buy <rarity>\n/lootbox open <rarity>\n"
                 f"{LOOTBOX_DISCLAIMER}",
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
@@ -351,11 +368,11 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 "🪤 *Advanced Traps*\n\n"
                 "Gunakan: `/trap <type> @user`\n\n"
-                "• `fake_investment` — 35% | 80-300 dmg\n"
-                "• `phishing_trap` — 40% | 60-200 dmg\n"
-                "• `tax_trap` — 30% | 100-400 dmg\n"
-                "• `pyramid_scheme` — 25% | 150-500 dmg\n"
-                "• `mafia_extortion` — 20% | 200-800 dmg\n\n"
+                "• `fake_investment` — 35% | 80-300 dmg | Rp0\n"
+                "• `phishing_trap` — 40% | 60-200 dmg | Rp50\n"
+                "• `tax_trap` — 30% | 100-400 dmg | Rp100\n"
+                "• `pyramid_scheme` — 25% | 150-500 dmg | Rp200\n"
+                "• `mafia_extortion` — 20% | 200-800 dmg | Rp300\n\n"
                 "Ketik `/traps` untuk detail lengkap.",
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
