@@ -21,7 +21,7 @@ async def modify_credit_score(user_id: int, delta: int) -> int:
     conn = await get_connection()
     try:
         await conn.execute(
-            """UPDATE users SET credit_score = MAX(?, MIN(?, credit_score + ?))
+            """UPDATE users SET credit_score = GREATEST(?, LEAST(?, credit_score + ?))
                WHERE id = ?""",
             (CREDIT_SCORE_MIN, CREDIT_SCORE_MAX, delta, user_id),
         )

@@ -71,22 +71,26 @@ async def build_profile_text(user, lang: str):
     conn = await get_connection()
     try:
         async with conn.execute(
-            """SELECT to_user,
-                      COALESCE(SUM(CASE WHEN type='utang' THEN amount ELSE 0 END), 0)
-                      - COALESCE(SUM(CASE WHEN type='nagih' THEN amount ELSE 0 END), 0) as outstanding
-               FROM transactions WHERE from_id = ? AND type IN ('utang','nagih')
-               GROUP BY to_user HAVING outstanding > 0
-               ORDER BY outstanding DESC LIMIT 3""",
+            """SELECT * FROM (
+                SELECT to_user,
+                  COALESCE(SUM(CASE WHEN type='utang' THEN amount ELSE 0 END), 0)
+                  - COALESCE(SUM(CASE WHEN type='nagih' THEN amount ELSE 0 END), 0) as outstanding
+                FROM transactions WHERE from_id = ? AND type IN ('utang','nagih')
+                GROUP BY to_user
+            ) sub WHERE outstanding > 0
+            ORDER BY outstanding DESC LIMIT 3""",
             (user.id,),
         ) as cur:
             lent_to = await cur.fetchall()
         async with conn.execute(
-            """SELECT from_id,
-                      COALESCE(SUM(CASE WHEN type='utang' THEN amount ELSE 0 END), 0)
-                      - COALESCE(SUM(CASE WHEN type='nagih' THEN amount ELSE 0 END), 0) as outstanding
-               FROM transactions WHERE to_user = ? AND type IN ('utang','nagih')
-               GROUP BY from_id HAVING outstanding > 0
-               ORDER BY outstanding DESC LIMIT 3""",
+            """SELECT * FROM (
+                SELECT from_id,
+                  COALESCE(SUM(CASE WHEN type='utang' THEN amount ELSE 0 END), 0)
+                  - COALESCE(SUM(CASE WHEN type='nagih' THEN amount ELSE 0 END), 0) as outstanding
+                FROM transactions WHERE to_user = ? AND type IN ('utang','nagih')
+                GROUP BY from_id
+            ) sub WHERE outstanding > 0
+            ORDER BY outstanding DESC LIMIT 3""",
             (username,),
         ) as cur:
             borrowed_from = await cur.fetchall()

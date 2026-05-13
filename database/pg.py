@@ -51,7 +51,8 @@ class PGRow:
 
 _SQL_REPLACEMENTS = [
     (r"datetime\('now',\s*'localtime'\)", "NOW()"),
-    (r"MAX\(0,\s*", "GREATEST(0, "),
+    (r"MAX\(\?,\s*", "GREATEST($1, "),
+    (r"MAX\(\$1,\s*", "GREATEST($1, "),
     (r"\bMIN\(", "LEAST("),
     (r"changes\(\)", "1"),
     (r"last_insert_rowid\(\)", "lastval()"),
