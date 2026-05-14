@@ -1,3 +1,4 @@
+import os
 import logging
 from uuid import uuid4
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
@@ -9,6 +10,9 @@ from database.user_repo import register_user
 from services.payment_service import PRODUCTS, get_gems, add_gems, record_purchase, has_active_season_pass
 
 logger = logging.getLogger(__name__)
+
+
+PAYMENT_TOKEN = os.getenv("PAYMENT_TOKEN")
 
 
 async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -30,7 +34,7 @@ async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buttons = []
     for pid, p in PRODUCTS.items():
         name = p["title"]
-        price = f"{p['stars']}⭐"
+        price = p.get("label", f"${p['price_cents']/100:.2f}")
         if pid == "season_pass" and has_sp:
             name += " ✅"
         buttons.append([InlineKeyboardButton(f"{name} — {price}", callback_data=f"shop_{pid}")])
@@ -69,15 +73,15 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.edit_message_text(f"⏳ Memproses pembelian {product['title']}...")
 
-    prices = [LabeledPrice(product["title"], product["stars"] * 100)]
+    prices = [LabeledPrice(product["title"], product["price_cents"])]
     try:
         await context.bot.send_invoice(
             chat_id=user.id,
             title=product["title"],
             description=product["description"],
             payload=f"debtwar_{product['id']}_{user.id}",
-            provider_token=None,
-            currency="XTR",
+            provider_token=PAYMENT_TOKEN or None,
+            currency="USD",
             prices=prices,
         )
     except Exception as e:
