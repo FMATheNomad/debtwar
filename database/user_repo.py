@@ -1,5 +1,4 @@
 import logging
-import re
 from datetime import date
 from database.db import get_connection
 
@@ -257,7 +256,7 @@ async def get_leaderboard(category: str, limit: int = 10):
             result = []
             for row in rows:
                 d = dict(row)
-                if re.match(r'^.+\_\d+$', d.get("username", "")):
+                if d.get("username", "").startswith("ghost_"):
                     continue
                 result.append(d)
             return result
@@ -378,7 +377,7 @@ async def get_leaderboard_chaos_detail(limit: int = 10) -> list:
             result = []
             for row in rows:
                 d = dict(row)
-                if re.match(r'^.+\_\d+$', d.get("username", "")):
+                if d.get("username", "").startswith("ghost_"):
                     continue
                 d["achievements"] = await get_achievement_count_by_username(d["username"])
                 d["titles"] = await get_title_count_by_username(d["username"])
