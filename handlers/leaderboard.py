@@ -16,7 +16,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
 
     text = f"{t('leaderboard_title', lang)}\n\n"
-    text += f"🔹 *{t('leaderboard_richest', lang)}*\n"
+    text += f"🔹 {t('leaderboard_richest', lang)}\n"
     rows = await get_leaderboard("richest", 5)
     if rows:
         for i, row in enumerate(rows, 1):
@@ -25,7 +25,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         text += f"{t('leaderboard_empty', lang)}\n"
 
-    text += f"\n🔹 *{t('leaderboard_debt', lang)}*\n"
+    text += f"\n🔹 {t('leaderboard_debt', lang)}\n"
     rows = await get_leaderboard("debt", 5)
     if rows:
         for i, row in enumerate(rows, 1):
@@ -34,7 +34,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         text += f"{t('leaderboard_empty', lang)}\n"
 
-    text += f"\n🔹 *{t('leaderboard_chaos', lang)}*\n"
+    text += f"\n🔹 {t('leaderboard_chaos', lang)}\n"
     rows = await get_leaderboard("chaos", 5)
     if rows:
         for i, row in enumerate(rows, 1):
