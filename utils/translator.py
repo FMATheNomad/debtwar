@@ -524,6 +524,8 @@ _translations = {
             "\u2022 \U0001f9d1\u200d\u2642\ufe0f 4 NPC interaktif + Misi\n"
             "\u2022 \U0001f3db\ufe0f Pengadilan + voting + denda\n"
             "\u2022 \U0001f3ad World News + Event global\n"
+            "\u2022 \U0001f4c8 Investasi saham, reksadana, obligasi\n"
+            "\u2022 \U0001f4cb Riwayat transaksi + saldo (/history)\n"
             "\u2022 \U0001f3af Season 30 hari + Leaderboard\n\n"
             "\U0001f6a9 *Peringatan:* Casino & lootbox hanya untuk hiburan. 18+.\n"
             "Bermainlah dengan bijak dan bertanggung jawab.\n\n"
