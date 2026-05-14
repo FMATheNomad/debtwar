@@ -56,56 +56,63 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     back_kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Kembali", callback_data="leaderboard_show")]])
 
-    if data == "lb_chaos_detail":
-        rows = await get_leaderboard_chaos_detail(10)
-        lines = [t("leaderboard_chaos_detail_title", lang)]
+    try:
+        valid = {"lb_richest", "lb_debt", "lb_chaos", "lb_chaos_detail"}
+        if data not in valid:
+            await query.edit_message_text("Leaderboard gak ditemukan.", reply_markup=back_kb)
+            return
+
+        if data == "lb_chaos_detail":
+            rows = await get_leaderboard_chaos_detail(10)
+            lines = [t("leaderboard_chaos_detail_title", lang)]
+            if not rows:
+                lines.append(t("leaderboard_empty", lang))
+            else:
+                for i, row in enumerate(rows, 1):
+                    medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
+                    raw_name = row.get("username", "") or ""
+                    display = row.get("display_name") or ""
+                    name = display if display else f"@{raw_name}" if raw_name else "Player"
+                    score = row.get("chaos_score", 0)
+                    t_set = row.get("traps_set", 0)
+                    t_ok = row.get("traps_successful", 0)
+                    lent = row.get("total_lent", 0)
+                    col = row.get("total_collected", 0)
+                    ach = row.get("achievements", 0)
+                    titles = row.get("titles", 0)
+                    active_title = row.get("active_title", "")
+                    title_str = f" 👑 {active_title}" if active_title else ""
+                    lines.append(
+                        f"{medal} {name}{title_str}\n"
+                        f"   Score: {score} | Trap: {t_set}/{t_ok}\n"
+                        f"   Lend: {lent} | Collect: {col} | Ach: {ach} | Titles: {titles}\n"
+                    )
+            await query.edit_message_text("".join(lines), parse_mode="Markdown", reply_markup=back_kb)
+            return
+
+        category = data.replace("lb_", "")
+        rows = await get_leaderboard(category, 10)
+        lines = []
+        titles_map = {"richest": "leaderboard_richest", "debt": "leaderboard_debt", "chaos": "leaderboard_chaos"}
+        title_key = titles_map.get(category, "")
+        if title_key:
+            lines.append(f"{t(title_key, lang)}")
+
         if not rows:
             lines.append(t("leaderboard_empty", lang))
         else:
             for i, row in enumerate(rows, 1):
-                medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-                raw_name = row.get("username", "")
+                raw_name = row.get("username", "") or ""
                 display = row.get("display_name") or ""
-                tag = f"@{raw_name}" if raw_name and not re.match(r'.+\d{5,}', raw_name) else display
-                name = display if display else tag
-                score = row.get("chaos_score", 0)
-                t_set = row.get("traps_set", 0)
-                t_ok = row.get("traps_successful", 0)
-                lent = row.get("total_lent", 0)
-                col = row.get("total_collected", 0)
-                ach = row.get("achievements", 0)
-                titles = row.get("titles", 0)
-                active_title = row.get("active_title", "")
-                title_str = f" 👑 {active_title}" if active_title else ""
-                lines.append(
-                    f"{medal} {name}{title_str}\n"
-                    f"   Score: {score} | Trap: {t_set}/{t_ok}\n"
-                    f"   Lend: {lent} | Collect: {col} | Ach: {ach} | Titles: {titles}\n"
-                )
-        await query.edit_message_text("".join(lines), parse_mode="Markdown", reply_markup=back_kb)
-        return
+                name = display if display else f"@{raw_name}" if raw_name else "Player"
+                keys = list(row.keys())
+                val_key = [k for k in keys if k not in ("username", "display_name")][0]
+                val = row.get(val_key, 0)
+                medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
+                lines.append(f"{medal} {name} \u2014 {val}")
 
-    category = data.replace("lb_", "")
-    rows = await get_leaderboard(category, 10)
-    lines = []
-    emojis = {"richest": "\U0001f4b0", "debt": "\U0001f4b3", "chaos": "\U0001f608"}
-    titles_map = {"richest": "leaderboard_richest", "debt": "leaderboard_debt", "chaos": "leaderboard_chaos"}
-    title_key = titles_map.get(category, "")
-    if title_key:
-        lines.append(f"{t(title_key, lang)}")
+        await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_kb)
 
-    if not rows:
-        lines.append(t("leaderboard_empty", lang))
-    else:
-        for i, row in enumerate(rows, 1):
-            raw_name = row.get("username", "")
-            display = row.get("display_name") or ""
-            tag = f"@{raw_name}" if raw_name and not re.match(r'.+\d{5,}', raw_name) else display
-            name = display if display else tag
-            keys = list(row.keys())
-            val_key = [k for k in keys if k not in ("username", "display_name")][0]
-            val = row.get(val_key, 0)
-            medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-            lines.append(f"{medal} {name} \u2014 {val}")
-
-    await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_kb)
+    except Exception as e:
+        logger.error(f"LB callback error: {e}")
+        await query.edit_message_text("⚠️ Error memuat leaderboard.", reply_markup=back_kb)
