@@ -36,6 +36,7 @@ from handlers.market import cmd_market, cmd_buy, cmd_inventory
 from handlers.lootbox import cmd_lootbox
 from handlers.npc import cmd_npc
 from handlers.investment import cmd_invest_buy, cmd_invest_sell
+from handlers.shop import cmd_shop, pre_checkout, successful_payment
 from handlers.court import cmd_court
 from handlers.lunas import cmd_lunas
 from handlers.setname import cmd_setname
@@ -273,8 +274,11 @@ def main():
     app.add_handler(CommandHandler("name", cmd_setname))
     app.add_handler(CommandHandler("investbuy", cmd_invest_buy))
     app.add_handler(CommandHandler("investsell", cmd_invest_sell))
+    app.add_handler(CommandHandler("shop", cmd_shop))
+    app.add_handler(PreCheckoutQueryHandler(pre_checkout))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
-    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_|history_).*"))
+    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_|history_|shop_).*"))
 
     from handlers.leaderboard import lb_callback
     app.add_handler(CallbackQueryHandler(lb_callback, pattern="^lb_.*"))

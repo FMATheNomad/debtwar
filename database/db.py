@@ -325,6 +325,21 @@ CREATE TABLE IF NOT EXISTS investment_portfolios (
     total_invested  INTEGER DEFAULT 0,
     purchased_at    TEXT DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS purchases (
+    id              SERIAL PRIMARY KEY,
+    user_id         BIGINT NOT NULL,
+    product_id      TEXT NOT NULL,
+    telegram_charge_id TEXT,
+    amount_stars    INTEGER DEFAULT 0,
+    purchased_at    TEXT DEFAULT NOW(),
+    expires_at      TEXT
+);
+
+CREATE TABLE IF NOT EXISTS user_gems (
+    user_id         BIGINT PRIMARY KEY,
+    balance         INTEGER DEFAULT 0
+);
 """
         else:
             sql = SQLITE_SCHEMA
@@ -667,5 +682,18 @@ CREATE TABLE IF NOT EXISTS investment_portfolios (
     shares          REAL DEFAULT 0,
     total_invested  INTEGER DEFAULT 0,
     purchased_at    TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS purchases (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL,
+    product_id      TEXT NOT NULL,
+    telegram_charge_id TEXT,
+    amount_stars    INTEGER DEFAULT 0,
+    purchased_at    TEXT DEFAULT (datetime('now', 'localtime')),
+    expires_at      TEXT
+);
+CREATE TABLE IF NOT EXISTS user_gems (
+    user_id         INTEGER PRIMARY KEY,
+    balance         INTEGER DEFAULT 0
 );
 """

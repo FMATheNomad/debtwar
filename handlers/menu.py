@@ -37,6 +37,7 @@ _BTN_DESCS = {
     "world_news_show": "btn_desc_world_news",
     "invest_show": "btn_desc_invest",
     "history_show": "btn_desc_history",
+    "shop_menu": "btn_desc_shop",
 }
 
 
@@ -292,6 +293,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text, parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
             )
+
+        elif data.startswith("shop_"):
+            from handlers.shop import shop_callback
+            await shop_callback(update, context)
 
         elif data == "drama_show":
             _push_nav(context, "social_menu")

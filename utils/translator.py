@@ -1023,6 +1023,10 @@ _translations = {
         "id": "📜 Riwayat transaksi terkini",
         "en": "📜 Recent transaction history",
     },
+    "btn_desc_shop": {
+        "id": "🏪 Beli Season Pass, Gems, dan paket lainnya",
+        "en": "🏪 Buy Season Pass, Gems, and more",
+    },
     "unknown_error": {
         "id": "Terjadi error. Coba lagi.",
         "en": "An error occurred. Try again.",
