@@ -28,7 +28,6 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
         ],
         [
-            InlineKeyboardButton("🏪 Shop", callback_data="shop_menu"),
             InlineKeyboardButton(t("menu_btn_faq", lang), callback_data="faq_show"),
         ],
     ]

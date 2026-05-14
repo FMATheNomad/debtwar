@@ -294,10 +294,6 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=back_to_main_keyboard(lang),
             )
 
-        elif data.startswith("shop_"):
-            from handlers.shop import shop_callback
-            await shop_callback(update, context)
-
         elif data == "drama_show":
             _push_nav(context, "social_menu")
             from handlers.drama import drama_callback
