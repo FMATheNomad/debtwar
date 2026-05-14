@@ -44,14 +44,15 @@ async def get_portfolio(user_id: int) -> list:
     conn = await get_connection()
     try:
         async with conn.execute(
+            "SELECT * FROM ("
             "SELECT ip.instrument_type, ip.instrument_id, ip.instrument_name, ip.current_price, "
             "COALESCE(SUM(iv.shares), 0) as shares, "
             "COALESCE(SUM(iv.total_invested), 0) as total_invested "
             "FROM investment_prices ip "
             "LEFT JOIN investment_portfolios iv ON ip.instrument_id = iv.instrument_id "
             "AND ip.instrument_type = iv.instrument_type AND iv.user_id = ? "
-            "GROUP BY ip.instrument_type, ip.instrument_id, ip.instrument_name, ip.current_price "
-            "HAVING shares > 0",
+            "GROUP BY ip.instrument_type, ip.instrument_id, ip.instrument_name, ip.current_price"
+            ") sub WHERE shares > 0",
             (user_id,),
         ) as cur:
             rows = await cur.fetchall()
