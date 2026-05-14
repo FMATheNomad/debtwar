@@ -1,8 +1,8 @@
 import os
 import logging
 from uuid import uuid4
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
-from telegram.ext import ContextTypes, PreCheckoutQueryHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
 from utils.translator import t
 from utils.helpers import get_username_or_fallback
 from utils.keyboards import back_to_main_keyboard
@@ -11,8 +11,8 @@ from services.payment_service import PRODUCTS, get_gems, add_gems, record_purcha
 
 logger = logging.getLogger(__name__)
 
-
-PAYMENT_TOKEN = os.getenv("PAYMENT_TOKEN")
+DOKU_MERCHANT = os.getenv("DOKU_MERCHANT")
+DOKU_SECRET = os.getenv("DOKU_SECRET")
 
 
 async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -28,7 +28,7 @@ async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🏪 *Debt War Shop*\n\n"
         f"💎 Gems kamu: *{gems}*\n"
         f"🎟️ Season Pass: {sp_status}\n\n"
-        f"Pilih produk di bawah:\n"
+        f"Pilih produk:\n"
     )
 
     buttons = []
@@ -71,54 +71,40 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not product:
         return
 
-    await query.edit_message_text(f"⏳ Memproses pembelian {product['title']}...")
+    invoice_id = f"DW-{user.id}-{uuid4().hex[:8].upper()}"
+    amount = product["price_cents"]
+    context.user_data["pending_payment"] = {
+        "invoice_id": invoice_id,
+        "product_id": product["id"],
+        "user_id": user.id,
+    }
 
-    prices = [LabeledPrice(product["title"], product["price_cents"])]
-    try:
-        await context.bot.send_invoice(
-            chat_id=user.id,
-            title=product["title"],
-            description=product["description"],
-            payload=f"debtwar_{product['id']}_{user.id}",
-            provider_token=PAYMENT_TOKEN or None,
-            currency="USD",
-            prices=prices,
+    text = (
+        f"🧾 *Invoice #{invoice_id}*\n\n"
+        f"{product['title']}\n"
+        f"Total: *{product.get('label', f'${amount/100:.2f}')}*\n\n"
+    )
+
+    if DOKU_MERCHANT and DOKU_SECRET:
+        text += (
+            "💳 *Cara Bayar via Doku:*\n"
+            "1. Transfer ke VA berikut:\n"
+            f"   *Bank BCA / Mandiri / BNI*\n"
+            f"   *No Virtual Account: {invoice_id}*\n"
+            "2. Konfirmasi dengan kirim /pay\n"
+            f"3. Atau klik link berikut:\n"
         )
-    except Exception as e:
-        logger.warning(f"Stars payment error: {e}")
-        await query.edit_message_text(
-            "❌ Pembayaran Telegram Stars belum diaktifkan.\n\n"
-            "Owner bot harus setting dulu di @BotFather:\n"
-            "1. /mybots → pilih bot → Payments\n"
-            "2. Enable Telegram Stars\n"
-            "3. Coba lagi setelah selesai.",
-            reply_markup=back_to_main_keyboard(lang),
-        )
-
-
-async def pre_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.pre_checkout_query
-    if query.invoice_payload.startswith("debtwar_"):
-        await query.answer(ok=True)
+        buttons = [
+            [InlineKeyboardButton("💳 Bayar via Doku", url=f"https://journal.doku.com/checkout?invoice={invoice_id}")],
+            [InlineKeyboardButton("✅ Saya sudah bayar", callback_data="pay_confirm")],
+            [InlineKeyboardButton("🔙 Batal", callback_data="menu_main")],
+        ]
     else:
-        await query.answer(ok=False, error_message="Invalid product")
+        text += (
+            "⚠️ *Pembayaran otomatis belum aktif.*\n\n"
+            "Owner bot sedang mengatur metode pembayaran.\n"
+            "Sementara ini bisa hubungi owner langsung."
+        )
+        buttons = [[InlineKeyboardButton("🔙 Kembali", callback_data="menu_main")]]
 
-
-async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    payment = update.effective_message.successful_payment
-    payload = payment.invoice_payload
-    parts = payload.split("_")
-    if len(parts) >= 3:
-        product_id = parts[1]
-        charge_id = payment.telegram_payment_charge_id
-        stars = payment.total_amount // 100
-        await record_purchase(user.id, product_id, charge_id, stars)
-        product = PRODUCTS.get(product_id)
-        name = product["title"] if product else product_id
-        text = f"✅ *Pembelian Berhasil!*\n\n{name} sudah aktif!"
-        if product_id == "starter_pack":
-            text += "\n💰 +500 coins! Cek saldo kamu."
-        elif product.get("type") == "gems":
-            text += f"\n💎 +{product.get('gems', 0)} Gems!"
-        await update.effective_message.reply_text(text, parse_mode="Markdown")
+    await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))
