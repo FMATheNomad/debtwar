@@ -8,6 +8,7 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
+    PreCheckoutQueryHandler,
     filters,
     ContextTypes,
 )
@@ -276,7 +277,7 @@ def main():
     app.add_handler(CommandHandler("investsell", cmd_invest_sell))
     app.add_handler(CommandHandler("shop", cmd_shop))
     app.add_handler(PreCheckoutQueryHandler(pre_checkout))
-    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
+    app.add_handler(MessageHandler(filters.StatusUpdate.SUCCESSFUL_PAYMENT, successful_payment))
 
     app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_|history_|shop_).*"))
 
