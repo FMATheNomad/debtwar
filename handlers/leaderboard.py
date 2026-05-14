@@ -1,4 +1,5 @@
 import logging
+import re
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -63,7 +64,10 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             for i, row in enumerate(rows, 1):
                 medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-                name = row.get("username", "???")
+                raw_name = row.get("username", "")
+                display = row.get("display_name") or ""
+                tag = f"@{raw_name}" if raw_name and not re.match(r'.+\d{5,}', raw_name) else display
+                name = display if display else tag
                 score = row.get("chaos_score", 0)
                 t_set = row.get("traps_set", 0)
                 t_ok = row.get("traps_successful", 0)
@@ -86,21 +90,22 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lines = []
     emojis = {"richest": "\U0001f4b0", "debt": "\U0001f4b3", "chaos": "\U0001f608"}
     titles_map = {"richest": "leaderboard_richest", "debt": "leaderboard_debt", "chaos": "leaderboard_chaos"}
-    emoji = emojis.get(category, "")
     title_key = titles_map.get(category, "")
     if title_key:
-        lines.append(f"{emoji} {t(title_key, lang)}")
+        lines.append(f"{t(title_key, lang)}")
 
     if not rows:
         lines.append(t("leaderboard_empty", lang))
     else:
         for i, row in enumerate(rows, 1):
-            name = row.get("display_name") or row.get("username", "???")
-            uname = row.get("username", "???")
+            raw_name = row.get("username", "")
+            display = row.get("display_name") or ""
+            tag = f"@{raw_name}" if raw_name and not re.match(r'.+\d{5,}', raw_name) else display
+            name = display if display else tag
             keys = list(row.keys())
             val_key = [k for k in keys if k not in ("username", "display_name")][0]
             val = row.get(val_key, 0)
             medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-            lines.append(f"{medal} {name} (`@{uname}`) \u2014 {val}")
+            lines.append(f"{medal} {name} \u2014 {val}")
 
     await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_kb)
