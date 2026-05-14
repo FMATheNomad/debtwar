@@ -35,6 +35,7 @@ _BTN_DESCS = {
     "wanted_show": "btn_desc_wanted",
     "drama_show": "btn_desc_drama",
     "world_news_show": "btn_desc_world_news",
+    "invest_show": "btn_desc_invest",
 }
 
 
@@ -387,6 +388,11 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "/lunas — lunasin semua",
                 reply_markup=back_to_main_keyboard(lang),
             )
+
+        elif data.startswith("invest_"):
+            _push_nav(context, "menu_main")
+            from handlers.investment import investment_callback
+            await investment_callback(update, context)
 
         elif data == "bank_info":
             _push_nav(context, "menu_main")

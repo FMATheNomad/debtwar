@@ -17,6 +17,10 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("menu_btn_chaos", lang), callback_data="menu_chaos"),
         ],
         [
+            InlineKeyboardButton("🏦 Bank", callback_data="bank_info"),
+            InlineKeyboardButton("💹 Investasi", callback_data="invest_show"),
+        ],
+        [
             InlineKeyboardButton("🏴 Social", callback_data="social_menu"),
             InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
         ],

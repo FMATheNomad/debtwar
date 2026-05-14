@@ -305,6 +305,26 @@ CREATE TABLE IF NOT EXISTS lootbox_rewards (
     rarity       TEXT,
     opened_at    TEXT DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS investment_prices (
+    instrument_type TEXT NOT NULL,
+    instrument_id   TEXT NOT NULL,
+    instrument_name TEXT,
+    current_price   REAL DEFAULT 100.0,
+    previous_price  REAL DEFAULT 100.0,
+    updated_at      TEXT DEFAULT NOW(),
+    PRIMARY KEY (instrument_type, instrument_id)
+);
+
+CREATE TABLE IF NOT EXISTS investment_portfolios (
+    id              SERIAL PRIMARY KEY,
+    user_id         BIGINT NOT NULL,
+    instrument_type TEXT NOT NULL,
+    instrument_id   TEXT NOT NULL,
+    shares          REAL DEFAULT 0,
+    total_invested  INTEGER DEFAULT 0,
+    purchased_at    TEXT DEFAULT NOW()
+);
 """
         else:
             sql = SQLITE_SCHEMA
@@ -350,6 +370,32 @@ async def seed_default_data(conn):
                 await conn.execute("INSERT INTO trap_types (id, name, success_rate, min_damage, max_damage, cooldown_seconds, min_level, cost) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT(id) DO NOTHING", ts)
             else:
                 await conn.execute("INSERT OR IGNORE INTO trap_types (id, name, success_rate, min_damage, max_damage, cooldown_seconds, min_level, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", ts)
+        except Exception:
+            pass
+    investments = [
+        ("stock", "TECH", "Teknologi Nusantara", 5000),
+        ("stock", "BANK", "Bank Digital Indonesia", 3000),
+        ("stock", "ENER", "Energi Hijau Tbk", 2000),
+        ("stock", "FOOD", "Food Chain Indonesia", 1500),
+        ("stock", "CPRO", "Crypto Pro Mining", 8000),
+        ("stock", "HELT", "Healthcorp Indonesia", 4000),
+        ("stock", "PROP", "Properti Bangun Negeri", 1000),
+        ("stock", "OILC", "Oil Corp Indonesia", 6000),
+        ("mutual_fund", "RD-001", "Sucorinvest Equity Fund", 2500),
+        ("mutual_fund", "RD-002", "Mandiri Investa Aktif", 2000),
+        ("mutual_fund", "RD-003", "Schrodder Dana Prestasi", 3000),
+        ("mutual_fund", "RD-004", "Danareksa Mawar Pendapatan Tetap", 1500),
+        ("mutual_fund", "RD-005", "BNP Paribas Pesona", 3500),
+        ("bond", "ORI-001", "Obligasi Ritel 7 Hari (0.5%)", 1000),
+        ("bond", "ORI-007", "Obligasi Ritel 14 Hari (1.2%)", 1000),
+        ("bond", "ORI-030", "Obligasi Ritel 30 Hari (3.0%)", 1000),
+    ]
+    for inv in investments:
+        try:
+            if DB_BACKEND == "postgres":
+                await conn.execute("INSERT INTO investment_prices (instrument_type, instrument_id, instrument_name, current_price, previous_price) VALUES ($1, $2, $3, $4, $4) ON CONFLICT DO NOTHING", inv)
+            else:
+                await conn.execute("INSERT OR IGNORE INTO investment_prices (instrument_type, instrument_id, instrument_name, current_price, previous_price) VALUES (?, ?, ?, ?, ?)", inv)
         except Exception:
             pass
     await conn.commit()
@@ -603,5 +649,23 @@ CREATE TABLE IF NOT EXISTS lootbox_rewards (
     reward_value INTEGER DEFAULT 0,
     rarity       TEXT,
     opened_at    TEXT DEFAULT (datetime('now', 'localtime'))
+);
+CREATE TABLE IF NOT EXISTS investment_prices (
+    instrument_type TEXT NOT NULL,
+    instrument_id   TEXT NOT NULL,
+    instrument_name TEXT,
+    current_price   REAL DEFAULT 100.0,
+    previous_price  REAL DEFAULT 100.0,
+    updated_at      TEXT DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (instrument_type, instrument_id)
+);
+CREATE TABLE IF NOT EXISTS investment_portfolios (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL,
+    instrument_type TEXT NOT NULL,
+    instrument_id   TEXT NOT NULL,
+    shares          REAL DEFAULT 0,
+    total_invested  INTEGER DEFAULT 0,
+    purchased_at    TEXT DEFAULT (datetime('now', 'localtime'))
 );
 """

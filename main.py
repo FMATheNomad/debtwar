@@ -35,6 +35,7 @@ from handlers.casino import cmd_casino, cmd_slots, cmd_blackjack, cmd_roulette
 from handlers.market import cmd_market, cmd_buy, cmd_inventory
 from handlers.lootbox import cmd_lootbox
 from handlers.npc import cmd_npc
+from handlers.investment import cmd_invest_buy, cmd_invest_sell
 from handlers.court import cmd_court
 from handlers.lunas import cmd_lunas
 from handlers.setname import cmd_setname
@@ -45,6 +46,7 @@ from services.world_event_service import trigger_random_event, deactivate_expire
 from services.bank_service import process_bank_interest
 from services.rate_limiter import check_rate_limit as global_rl
 from services.backup_service import schedule_backup
+from services.investment_service import simulate_prices
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
@@ -152,6 +154,16 @@ async def on_startup(app):
     asyncio.create_task(schedule_world_events(app))
     asyncio.create_task(schedule_bank_interest(app))
     asyncio.create_task(schedule_backup())
+    asyncio.create_task(schedule_investment_prices())
+
+
+async def schedule_investment_prices():
+    while True:
+        await asyncio.sleep(3600)
+        try:
+            await simulate_prices()
+        except Exception as e:
+            logger.error(f"Investment price error: {e}")
 
 
 async def schedule_interest(app):
@@ -259,8 +271,10 @@ def main():
     app.add_handler(CommandHandler("pay", cmd_lunas))
     app.add_handler(CommandHandler("setname", cmd_setname))
     app.add_handler(CommandHandler("name", cmd_setname))
+    app.add_handler(CommandHandler("invest-buy", cmd_invest_buy))
+    app.add_handler(CommandHandler("invest-sell", cmd_invest_sell))
 
-    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_).*"))
+    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_).*"))
 
     from handlers.leaderboard import lb_callback
     app.add_handler(CallbackQueryHandler(lb_callback, pattern="^lb_.*"))

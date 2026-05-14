@@ -1007,6 +1007,10 @@ _translations = {
         "id": "📰 Berita dan event terkini di dunia Debt War",
         "en": "📰 Latest news and events in Debt War",
     },
+    "btn_desc_invest": {
+        "id": "💹 Investasi saham, reksadana, dan obligasi",
+        "en": "💹 Invest in stocks, mutual funds, and bonds",
+    },
     "unknown_error": {
         "id": "Terjadi error. Coba lagi.",
         "en": "An error occurred. Try again.",
