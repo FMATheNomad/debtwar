@@ -88,7 +88,7 @@ async def cmd_invest_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await register_user(user.id, get_username_or_fallback(user), lang)
 
     if len(context.args) < 3:
-        await update.message.reply_text("Gunakan: /invest-buy <type> <id> <jumlah>\nContoh: /invest-buy stock TECH 5000")
+        await update.message.reply_text("Gunakan: /investbuy <type> <id> <jumlah>\nContoh: /investbuy stock TECH 5000")
         return
 
     itype = context.args[0].lower()
@@ -113,7 +113,7 @@ async def cmd_invest_sell(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await register_user(user.id, get_username_or_fallback(user), lang)
 
     if len(context.args) < 2:
-        await update.message.reply_text("Gunakan: /invest-sell <type> <id>\nContoh: /invest-sell stock TECH")
+        await update.message.reply_text("Gunakan: /investsell <type> <id>\nContoh: /investsell stock TECH")
         return
 
     itype = context.args[0].lower()
