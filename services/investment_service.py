@@ -61,6 +61,8 @@ async def get_portfolio(user_id: int) -> list:
 
 
 async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: str) -> dict:
+    from database.user_repo import add_transaction
+
     user = await get_user_full(user_id)
     if not user or user["balance"] < amount:
         bal = format_money(user["balance"] if user else 0, lang)
@@ -80,12 +82,17 @@ async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: 
         price = instr["current_price"]
         shares = amount / price
 
-        await update_balance(user_id, -amount)
+        await conn.execute(
+            "UPDATE users SET balance = MAX(0, balance - ?) WHERE id = ?",
+            (amount, user_id),
+        )
         await conn.execute(
             "INSERT INTO investment_portfolios (user_id, instrument_type, instrument_id, shares, total_invested) VALUES (?, ?, ?, ?, ?)",
             (user_id, itype, iid, shares, amount),
         )
         await conn.commit()
+
+        await add_transaction(user_id, instr["instrument_name"], "invest_buy", amount)
 
         return {
             "ok": True,
@@ -96,6 +103,8 @@ async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: 
 
 
 async def sell_instrument(user_id: int, itype: str, iid: str, lang: str) -> dict:
+    from database.user_repo import add_transaction
+
     conn = await get_connection()
     try:
         async with conn.execute(
@@ -118,15 +127,20 @@ async def sell_instrument(user_id: int, itype: str, iid: str, lang: str) -> dict
 
         current_price = instr["current_price"]
         total_value = int(holding["total_shares"] * current_price)
-        profit = total_value - holding["total_invested"]
 
-        await update_balance(user_id, total_value)
+        await conn.execute(
+            "UPDATE users SET balance = balance + ? WHERE id = ?",
+            (total_value, user_id),
+        )
         await conn.execute(
             "DELETE FROM investment_portfolios WHERE user_id = ? AND instrument_type = ? AND instrument_id = ?",
             (user_id, itype, iid),
         )
         await conn.commit()
 
+        await add_transaction(user_id, instr["instrument_name"], "invest_sell", total_value)
+
+        profit = total_value - holding["total_invested"]
         pnl = f"+{format_money(profit, lang)}" if profit >= 0 else format_money(profit, lang)
         return {
             "ok": True,

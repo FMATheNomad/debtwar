@@ -15,6 +15,7 @@ TYPE_LABEL = {
     "interest_profit": "Bunga Masuk", "daily": "Daily Reward", "lootbox": "Lootbox",
     "bank_deposit": "Deposit Bank", "bank_withdraw": "Tarik Bank",
     "trap": "Trap", "spy": "Spy", "sabotage": "Sabotase", "system": "Sistem",
+    "invest_buy": "Beli Investasi", "invest_sell": "Jual Investasi",
 }
 
 
