@@ -274,7 +274,7 @@ def main():
     app.add_handler(CommandHandler("investbuy", cmd_invest_buy))
     app.add_handler(CommandHandler("investsell", cmd_invest_sell))
 
-    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_).*"))
+    app.add_handler(CallbackQueryHandler(menu_callback, pattern="^(_back|menu_|profile_|daily_|leaderboard_|action_|faq_|credit_|stats_|titles_|title_select_|achievements_|social_|gang_|wanted_|drama_|chaos_|bank_|casino_|market_|inventory_|npc_|court_|trap_|world_|invest_|history_).*"))
 
     from handlers.leaderboard import lb_callback
     app.add_handler(CallbackQueryHandler(lb_callback, pattern="^lb_.*"))

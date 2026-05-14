@@ -1011,6 +1011,10 @@ _translations = {
         "id": "💹 Investasi saham, reksadana, dan obligasi",
         "en": "💹 Invest in stocks, mutual funds, and bonds",
     },
+    "btn_desc_history": {
+        "id": "📜 Riwayat transaksi terkini",
+        "en": "📜 Recent transaction history",
+    },
     "unknown_error": {
         "id": "Terjadi error. Coba lagi.",
         "en": "An error occurred. Try again.",

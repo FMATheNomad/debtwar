@@ -36,6 +36,7 @@ _BTN_DESCS = {
     "drama_show": "btn_desc_drama",
     "world_news_show": "btn_desc_world_news",
     "invest_show": "btn_desc_invest",
+    "history_show": "btn_desc_history",
 }
 
 
@@ -388,6 +389,11 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "/lunas — lunasin semua",
                 reply_markup=back_to_main_keyboard(lang),
             )
+
+        elif data.startswith("history_"):
+            _push_nav(context, "menu_main")
+            from handlers.history import history_callback
+            await history_callback(update, context)
 
         elif data.startswith("invest_"):
             _push_nav(context, "menu_main")

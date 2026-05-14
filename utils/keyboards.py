@@ -18,6 +18,9 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("🏦 Bank", callback_data="bank_info"),
+            InlineKeyboardButton("📜 History", callback_data="history_show"),
+        ],
+        [
             InlineKeyboardButton("💹 Investasi", callback_data="invest_show"),
         ],
         [
@@ -43,7 +46,6 @@ def chaos_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("🔄 Transfer", callback_data="action_transfer"),
-            InlineKeyboardButton("🏦 Bank", callback_data="bank_info"),
         ],
         [
             InlineKeyboardButton("🕵️ Spy", callback_data="chaos_spy"),
