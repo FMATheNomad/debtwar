@@ -10,11 +10,8 @@ DB_BACKEND = os.getenv("DB_BACKEND", "postgres" if os.getenv("DATABASE_URL") els
 
 async def get_connection():
     if DB_BACKEND == "postgres":
-        from database.pg import PGWrapper, PGRow
-        import asyncpg
-        pool = await asyncpg.create_pool(os.getenv("DATABASE_URL"), min_size=1, max_size=10)
-        conn = await pool.acquire()
-        wrapper = PGWrapper(conn, pool)
+        from database.pg import PGWrapper, PGRow, get_pg_connection
+        wrapper = await get_pg_connection()
         wrapper.row_factory = PGRow
         return wrapper
     conn = await aiosqlite.connect(DB_FILE)
