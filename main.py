@@ -46,9 +46,9 @@ from utils.keyboards import main_menu_keyboard, chaos_menu_keyboard
 from services.interest_service import process_interest_for_all
 from services.world_event_service import trigger_random_event, deactivate_expired_events
 from services.bank_service import process_bank_interest
-from services.rate_limiter import check_rate_limit as global_rl
 from services.backup_service import schedule_backup
 from services.investment_service import simulate_prices
+from services.court_service import resolve_pending_cases
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
@@ -157,6 +157,7 @@ async def on_startup(app):
     asyncio.create_task(schedule_bank_interest(app))
     asyncio.create_task(schedule_backup())
     asyncio.create_task(schedule_investment_prices())
+    asyncio.create_task(schedule_court_resolver())
 
 
 async def schedule_investment_prices():
@@ -199,6 +200,17 @@ async def schedule_bank_interest(app):
                 logger.info(f"Bank interest paid to {count} accounts")
         except Exception as e:
             logger.error(f"Bank interest error: {e}")
+
+
+async def schedule_court_resolver():
+    while True:
+        await asyncio.sleep(3600)
+        try:
+            count = await resolve_pending_cases()
+            if count > 0:
+                logger.info(f"Resolved {count} court cases")
+        except Exception as e:
+            logger.error(f"Court resolver error: {e}")
 
 
 async def post_stop(app):

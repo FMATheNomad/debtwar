@@ -25,7 +25,7 @@ async def cmd_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await register_user(sender.id, sender_uname, lang)
 
-    remaining = check_cooldown(sender.id, "transfer")
+    remaining = await check_cooldown(sender.id, "transfer")
     if remaining > 0:
         await update.message.reply_text(
             f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} {t('before_using', lang)}"

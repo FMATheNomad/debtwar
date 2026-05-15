@@ -19,7 +19,7 @@ async def cmd_sabotage(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
     await register_user(user.id, uname, lang)
 
-    remaining = check_cooldown(user.id, "sabotage")
+    remaining = await check_cooldown(user.id, "sabotage")
     if remaining > 0:
         await update.message.reply_text(f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} sabotage cooldown.")
         return
@@ -51,11 +51,10 @@ async def cmd_sabotage(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     from database.user_repo import get_user_full, update_balance
     attacker = await get_user_full(user.id)
-    if not attacker or attacker["balance"] < SABOTAGE_COST:
+    cost = SABOTAGE_COST
+    if not attacker or attacker["balance"] < cost:
         await update.message.reply_text(t("insufficient_balance", lang, balance=format_money(attacker.get("balance", 0) if attacker else 0, lang)))
         return
 
-    await update_balance(user.id, -SABOTAGE_COST)
-
-    result = await execute_sabotage(user.id, target_name, sabo_type, lang)
+    result = await execute_sabotage(user.id, target_name, sabo_type, lang, cost=cost)
     await update.message.reply_text(result["text"], parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

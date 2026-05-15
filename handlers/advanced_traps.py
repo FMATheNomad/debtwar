@@ -45,7 +45,7 @@ async def cmd_trap(update: Update, context: ContextTypes.DEFAULT_TYPE):
     trap_id = context.args[0].lower()
     target_name = parse_mention(context.args[1])
 
-    remaining = check_cooldown(user.id, f"trap_{trap_id}")
+    remaining = await check_cooldown(user.id, f"trap_{trap_id}")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s untuk trap ini.")
         return

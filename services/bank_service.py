@@ -101,7 +101,7 @@ async def process_bank_interest():
             accounts = await cur.fetchall()
 
         for acc in accounts:
-            interest = int(acc["balance"] * BANK_INTEREST_RATE)
+            interest = int(acc["balance"] * BANK_INTEREST_RATE / 12)
             if interest > 0:
                 await conn.execute(
                     "UPDATE bank_accounts SET balance = balance + ?, last_interest = datetime('now', 'localtime') WHERE user_id = ?",

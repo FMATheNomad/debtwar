@@ -27,15 +27,16 @@ async def play_slots(user_id: int, bet: int, lang: str) -> dict:
     await update_balance(user_id, -bet)
     await update_casino_stat(user_id, "slot_plays", bet)
 
-    reels = [random.choice(SLOT_SYMBOLS) for _ in range(3)]
+    if random.random() < CASINO_RTP:
+        reels = [random.choice(SLOT_SYMBOLS) for _ in range(3)]
+        win_multiplier = SLOT_PAYOUTS.get("".join(reels), 0)
+    else:
+        reels = [random.choice(SLOT_SYMBOLS) for _ in range(3)]
+        while "".join(reels) in SLOT_PAYOUTS:
+            reels = [random.choice(SLOT_SYMBOLS) for _ in range(3)]
+        win_multiplier = 0
+
     result_str = " | ".join(reels)
-
-    win_multiplier = SLOT_PAYOUTS.get("".join(reels), 0)
-
-    if random.random() > CASINO_RTP and win_multiplier > 0:
-        if random.random() < 0.3:
-            win_multiplier = 0
-
     winnings = int(bet * win_multiplier) if win_multiplier > 0 else 0
 
     if winnings > 0:
@@ -59,6 +60,22 @@ async def play_slots(user_id: int, bet: int, lang: str) -> dict:
     return {"ok": True, "text": text}
 
 
+BLACKJACK_DECK = [2,3,4,5,6,7,8,9,10,10,10,10,11] * 4
+
+
+def _draw(deck: list) -> int:
+    return deck.pop()
+
+
+def _hand_value(hand: list) -> int:
+    total = sum(hand)
+    aces = hand.count(11)
+    while total > 21 and aces > 0:
+        total -= 10
+        aces -= 1
+    return total
+
+
 async def play_blackjack(user_id: int, bet: int, lang: str) -> dict:
     if bet < CASINO_MIN_BET or bet > CASINO_MAX_BET:
         return {"ok": False, "text": t("casino_bet_range", lang, min=CASINO_MIN_BET, max=CASINO_MAX_BET)}
@@ -70,42 +87,101 @@ async def play_blackjack(user_id: int, bet: int, lang: str) -> dict:
     await update_balance(user_id, -bet)
     await update_casino_stat(user_id, "blackjack_plays", bet)
 
-    player = sum(random.randint(1, 10) for _ in range(2))
-    dealer = sum(random.randint(1, 10) for _ in range(2))
+    deck = BLACKJACK_DECK[:]
+    random.shuffle(deck)
+
+    player_hand = [_draw(deck), _draw(deck)]
+    dealer_hand = [_draw(deck), _draw(deck)]
+
+    player = _hand_value(player_hand)
+    dealer = _hand_value(dealer_hand)
+
+    player_cards = ", ".join(str(c) if c != 11 else "A" for c in player_hand)
+    dealer_cards = ", ".join(str(c) if c != 11 else "A" for c in dealer_hand)
+
+    player_bj = (player == 21 and len(player_hand) == 2)
+    dealer_bj = (dealer == 21 and len(dealer_hand) == 2)
+
+    if player_bj:
+        if dealer_bj:
+            await update_balance(user_id, bet)
+            text = (
+                f"🃏 *BLACKJACK*\n\n"
+                f"Kamu: {player_cards} ({player})\n"
+                f"Dealer: {dealer_cards} ({dealer})\n\n"
+                f"🤝 *SERI!* Sama-sama Blackjack."
+            )
+        else:
+            winnings = int(bet * 2.5)
+            await update_balance(user_id, winnings)
+            await update_casino_stat(user_id, "blackjack_wins", winnings)
+            net = winnings - bet
+            text = (
+                f"🃏 *BLACKJACK*\n\n"
+                f"Kamu: {player_cards} ({player})\n"
+                f"Dealer: {dealer_cards} ({dealer})\n\n"
+                f"♠️ *BLACKJACK!* +{format_money(net, lang)}"
+            )
+        return {"ok": True, "text": text}
+
+    if dealer_bj:
+        await update_casino_stat(user_id, "blackjack_losses", bet)
+        text = (
+            f"🃏 *BLACKJACK*\n\n"
+            f"Kamu: {player_cards} ({player})\n"
+            f"Dealer: {dealer_cards} ({dealer})\n\n"
+            f"❌ Dealer *Blackjack!* -{format_money(bet, lang)}"
+        )
+        return {"ok": True, "text": text}
+
+    while player < 17:
+        player_hand.append(_draw(deck))
+        player = _hand_value(player_hand)
+        player_cards = ", ".join(str(c) if c != 11 else "A" for c in player_hand)
 
     if player > 21:
-        player = 0
+        await update_casino_stat(user_id, "blackjack_losses", bet)
+        text = (
+            f"🃏 *BLACKJACK*\n\n"
+            f"Kamu: {player_cards} ({player})\n"
+            f"Dealer: {dealer_cards} ({dealer})\n\n"
+            f"❌ *BUST!* -{format_money(bet, lang)}"
+        )
+        return {"ok": True, "text": text}
 
-    dealer_hit = dealer < 17
-    while dealer_hit:
-        dealer += random.randint(1, 10)
-        if dealer > 21:
-            dealer = 0
-            break
-        dealer_hit = dealer < 17
+    while dealer < 17:
+        dealer_hand.append(_draw(deck))
+        dealer = _hand_value(dealer_hand)
+        dealer_cards = ", ".join(str(c) if c != 11 else "A" for c in dealer_hand)
+
+    if dealer > 21:
+        dealer = 0
 
     if player > dealer:
-        winnings = int(bet * 2)
+        winnings = int(bet * 1.95)
         await update_balance(user_id, winnings)
         await update_casino_stat(user_id, "blackjack_wins", winnings)
         net = winnings - bet
         text = (
             f"🃏 *BLACKJACK*\n\n"
-            f"Kamu: {player} | Dealer: {dealer}\n\n"
+            f"Kamu: {player_cards} ({player})\n"
+            f"Dealer: {dealer_cards} ({dealer})\n\n"
             f"✅ *MENANG!* +{format_money(net, lang)}"
         )
     elif player == dealer:
         await update_balance(user_id, bet)
         text = (
             f"🃏 *BLACKJACK*\n\n"
-            f"Kamu: {player} | Dealer: {dealer}\n\n"
+            f"Kamu: {player_cards} ({player})\n"
+            f"Dealer: {dealer_cards} ({dealer})\n\n"
             f"🤝 *SERI!* Uang kembali."
         )
     else:
         await update_casino_stat(user_id, "blackjack_losses", bet)
         text = (
             f"🃏 *BLACKJACK*\n\n"
-            f"Kamu: {player} | Dealer: {dealer}\n\n"
+            f"Kamu: {player_cards} ({player})\n"
+            f"Dealer: {dealer_cards} ({dealer})\n\n"
             f"❌ *KALAH!* -{format_money(bet, lang)}"
         )
 

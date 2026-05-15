@@ -21,7 +21,7 @@ async def cmd_jebak(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await register_user(trapper.id, trapper_uname, lang)
 
-    remaining = check_cooldown(trapper.id, "jebak")
+    remaining = await check_cooldown(trapper.id, "jebak")
     if remaining > 0:
         await update.message.reply_text(
             f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} {t('before_using', lang)}"

@@ -9,7 +9,7 @@ from utils.formatter import format_money
 logger = logging.getLogger(__name__)
 
 
-async def execute_sabotage(attacker_id: int, target_name: str, sabo_type: str, lang: str) -> dict:
+async def execute_sabotage(attacker_id: int, target_name: str, sabo_type: str, lang: str, cost: int = 0) -> dict:
     attacker = await get_user_full(attacker_id)
     if not attacker:
         return {"ok": False, "text": t("not_registered", lang)}
@@ -26,9 +26,11 @@ async def execute_sabotage(attacker_id: int, target_name: str, sabo_type: str, l
     tier = await get_credit_tier(attacker_id)
     success_rate = min(SABOTAGE_SUCCESS_RATE * tier["multipliers"]["spy_success"], 0.85)
 
+    if cost > 0:
+        await update_balance(attacker_id, -cost)
+
     if random.random() >= success_rate:
-        await update_balance(attacker_id, -SABOTAGE_FAIL_FINE)
-        return {"ok": False, "text": t("sabotage_failed", lang, fine=format_money(SABOTAGE_FAIL_FINE, lang))}
+        return {"ok": False, "text": t("sabotage_failed", lang, fine=format_money(cost, lang))}
 
     result_text = ""
     if sabo_type == "freeze":

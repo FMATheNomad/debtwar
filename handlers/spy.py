@@ -19,7 +19,7 @@ async def cmd_spy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
     await register_user(user.id, uname, lang)
 
-    remaining = check_cooldown(user.id, "spy")
+    remaining = await check_cooldown(user.id, "spy")
     if remaining > 0:
         await update.message.reply_text(f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} spy cooldown.")
         return

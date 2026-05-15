@@ -10,7 +10,6 @@ from services.gang_service import (
     handle_gang_vault_withdraw, handle_gang_leaderboard,
     handle_gang_war_declare,
 )
-from services.cooldown_service import check_cooldown
 from database.user_repo import register_user
 
 logger = logging.getLogger(__name__)

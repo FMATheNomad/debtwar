@@ -79,6 +79,10 @@ _translations = {
         "id": "@{username} tidak punya utang ke kamu.",
         "en": "@{username} has no debt to collect.",
     },
+    "nagih_not_creditor": {
+        "id": "Kamu tidak punya piutang ke @{username}. Cuma kreditor yang bisa nagih.",
+        "en": "You have no receivables from @{username}. Only creditors can collect.",
+    },
 
     # ── BANKRUPTCY ──
     "bankrupt_status": {

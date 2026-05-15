@@ -106,6 +106,25 @@ async def resolve_case(case_id: int, lang: str = "en") -> dict:
     return {"verdict": verdict, "text": result_text, "corrupted": corrupted, "guilty": guilty, "innocent": innocent}
 
 
+async def resolve_pending_cases() -> int:
+    conn = await get_connection()
+    resolved = 0
+    try:
+        async with conn.execute(
+            "SELECT id FROM court_cases WHERE status = 'pending' AND created_at < datetime('now', '-1 hour', 'localtime')"
+        ) as cur:
+            rows = await cur.fetchall()
+        for row in rows:
+            try:
+                await resolve_case(row["id"])
+                resolved += 1
+            except Exception:
+                pass
+    finally:
+        await conn.close()
+    return resolved
+
+
 async def get_pending_cases() -> list:
     conn = await get_connection()
     try:

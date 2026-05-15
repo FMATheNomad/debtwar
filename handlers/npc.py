@@ -30,7 +30,7 @@ async def cmd_npc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("NPC tidak dikenal. Coba: loan_shark, mafia_boss, scammer, collector")
         return
 
-    remaining = check_cooldown(user.id, f"npc_{npc_id}")
+    remaining = await check_cooldown(user.id, f"npc_{npc_id}")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s")
         return

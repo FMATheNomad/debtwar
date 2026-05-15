@@ -21,9 +21,15 @@ async def modify_credit_score(user_id: int, delta: int) -> int:
     conn = await get_connection()
     try:
         await conn.execute(
-            """UPDATE users SET credit_score = GREATEST(?, LEAST(?, credit_score + ?))
-               WHERE id = ?""",
-            (CREDIT_SCORE_MIN, CREDIT_SCORE_MAX, delta, user_id),
+            "UPDATE users SET credit_score = credit_score + ? WHERE id = ?",
+            (delta, user_id),
+        )
+        await conn.execute(
+            """UPDATE users SET credit_score = CASE
+               WHEN credit_score < ? THEN ?
+               WHEN credit_score > ? THEN ?
+               ELSE credit_score END WHERE id = ?""",
+            (CREDIT_SCORE_MIN, CREDIT_SCORE_MIN, CREDIT_SCORE_MAX, CREDIT_SCORE_MAX, user_id),
         )
         await conn.commit()
         async with conn.execute(

@@ -21,7 +21,7 @@ async def cmd_utang(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await register_user(lender.id, lender_uname, lang)
 
-    remaining = check_cooldown(lender.id, "utang")
+    remaining = await check_cooldown(lender.id, "utang")
     if remaining > 0:
         await update.message.reply_text(
             f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} {t('before_using', lang)}"

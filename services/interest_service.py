@@ -37,16 +37,25 @@ async def process_interest_for_all():
         if not user_data:
             continue
 
-        last_daily_str = user_data.get("last_daily")
-        if not last_daily_str:
+        last_interest_str = user_data.get("last_interest_calc")
+        use_field = "last_interest_calc"
+        calc_str = last_interest_str
+
+        if not calc_str:
+            calc_str = user_data.get("last_daily")
+
+        if not calc_str:
+            from database.user_repo import set_user_field
+            await set_user_field(user_id, "last_interest_calc", now.strftime("%Y-%m-%d %H:%M:%S"))
             continue
 
         try:
-            last_daily = datetime.strptime(last_daily_str, "%Y-%m-%d %H:%M:%S")
+            last_calc = datetime.strptime(str(calc_str), "%Y-%m-%d %H:%M:%S")
         except ValueError:
+            await set_user_field(user_id, "last_interest_calc", now.strftime("%Y-%m-%d %H:%M:%S"))
             continue
 
-        hours_passed = (now - last_daily).total_seconds() / 3600
+        hours_passed = (now - last_calc).total_seconds() / 3600
         if hours_passed < 24:
             continue
 
@@ -56,8 +65,10 @@ async def process_interest_for_all():
         if interest < INTEREST_MIN_AMOUNT:
             continue
 
+        from database.user_repo import set_user_field
         await update_debt(user_id, interest)
         await add_transaction(user_id, "system", "interest", interest)
+        await set_user_field(user_id, "last_interest_calc", now.strftime("%Y-%m-%d %H:%M:%S"))
 
         lenders = await get_lenders(username)
         if lenders:

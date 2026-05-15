@@ -174,9 +174,11 @@ async def simulate_prices():
                 change = random.uniform(-0.05, 0.06) * price * event_mult
 
             new_price = max(1, price + change)
+            from datetime import datetime
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             await conn.execute(
-                "UPDATE investment_prices SET current_price = ?, previous_price = ?, updated_at = NOW() WHERE instrument_type = ? AND instrument_id = ?",
-                (round(new_price, 2), round(price, 2), itype, instr["instrument_id"]),
+                "UPDATE investment_prices SET current_price = ?, previous_price = ?, updated_at = ? WHERE instrument_type = ? AND instrument_id = ?",
+                (round(new_price, 2), round(price, 2), now_str, itype, instr["instrument_id"]),
             )
 
         await conn.commit()

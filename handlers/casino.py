@@ -43,7 +43,7 @@ async def cmd_slots(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
     await register_user(user.id, get_username_or_fallback(user), lang)
 
-    remaining = check_cooldown(user.id, "slots")
+    remaining = await check_cooldown(user.id, "slots")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s")
         return
@@ -67,7 +67,7 @@ async def cmd_blackjack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
     await register_user(user.id, get_username_or_fallback(user), lang)
 
-    remaining = check_cooldown(user.id, "blackjack")
+    remaining = await check_cooldown(user.id, "blackjack")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s")
         return
@@ -91,7 +91,7 @@ async def cmd_roulette(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
     await register_user(user.id, get_username_or_fallback(user), lang)
 
-    remaining = check_cooldown(user.id, "roulette")
+    remaining = await check_cooldown(user.id, "roulette")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s")
         return

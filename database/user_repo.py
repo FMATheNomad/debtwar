@@ -24,7 +24,7 @@ async def get_user_full(user_id: int):
             """SELECT id, username, balance, debt, language,
                total_lent, total_collected, traps_set, traps_successful,
                daily_streak, last_daily, bankrupt_count, is_bankrupt,
-               bankruptcy_date, total_daily_claimed
+               bankruptcy_date, total_daily_claimed, last_interest_calc
                FROM users WHERE id = ?""",
             (user_id,),
         ) as cur:
@@ -60,8 +60,10 @@ async def get_or_create_by_username(username: str) -> dict:
         if row:
             return dict(row) | {"is_new": False}
 
-        import random, time
-        ghost_id = -random.randint(1_000_000, 99_999_999)
+        import time
+        _ghost_counter = getattr(get_or_create_by_username, "_counter", 0) + 1
+        setattr(get_or_create_by_username, "_counter", _ghost_counter)
+        ghost_id = -int(time.time() * 1000) - _ghost_counter
         await conn.execute(
             """INSERT INTO users (id, username, balance, debt, language, is_ghost)
                VALUES (?, ?, 1000, 0, 'id', 1) ON CONFLICT(id) DO NOTHING""",
@@ -484,6 +486,32 @@ async def set_display_name(user_id: int, name: str):
             "UPDATE users SET display_name = ? WHERE id = ?", (name, user_id)
         )
         await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def get_total_lent_to_target(lender_id: int, target_username: str) -> int:
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE from_id = ? AND to_user = ? AND type = 'utang'",
+            (lender_id, target_username),
+        ) as cur:
+            row = await cur.fetchone()
+            return row[0] if row else 0
+    finally:
+        await conn.close()
+
+
+async def get_interest_profit_for_lender(lender_id: int, target_username: str) -> int:
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE from_id = ? AND to_user = ? AND type = 'interest_profit'",
+            (lender_id, target_username),
+        ) as cur:
+            row = await cur.fetchone()
+            return row[0] if row else 0
     finally:
         await conn.close()
 

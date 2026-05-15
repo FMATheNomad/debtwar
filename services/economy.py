@@ -38,6 +38,7 @@ def calculate_trap() -> dict:
 async def apply_trap_consequences(trapper_id: int, target_name: str, result: dict, lang: str):
     from utils.helpers import get_username_or_fallback
     from utils.translator import t
+    from database.user_repo import get_user_by_username
 
     amount = result["amount"]
     penalty = result["penalty"]
@@ -46,7 +47,14 @@ async def apply_trap_consequences(trapper_id: int, target_name: str, result: dic
 
     if success:
         await update_debt_by_username(target_name, amount)
-        await update_balance(trapper_id, reward)
+        target_row = await get_user_by_username(target_name)
+        if target_row:
+            target_id = target_row[0]
+            target_balance = target_row[2]
+            actual_reward = min(reward, target_balance)
+            if actual_reward > 0:
+                await update_balance(target_id, -actual_reward)
+                await update_balance(trapper_id, actual_reward)
         await update_user_stat(trapper_id, "traps_set")
         await update_user_stat(trapper_id, "traps_successful")
         await add_transaction(trapper_id, target_name, "jebak_success", amount)

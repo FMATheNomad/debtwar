@@ -14,7 +14,7 @@ from database.user_repo import (
     check_daily_limit, add_daily_limit, add_transaction,
     add_ghost_notification,
 )
-from services.cooldown_service import check_cooldown
+
 from services.notification import send_notification
 
 logger = logging.getLogger(__name__)
@@ -79,6 +79,8 @@ async def execute_utang(lender_id: int, lender_name: str, target_name: str, amou
 
 
 async def execute_nagih(lender_id: int, lender_name: str, target_name: str, lang: str, context=None) -> dict:
+    from database.user_repo import get_total_lent_to_target, get_interest_profit_for_lender
+
     target = await get_or_create_by_username(target_name)
 
     if target["debt"] <= 0:
@@ -86,10 +88,20 @@ async def execute_nagih(lender_id: int, lender_name: str, target_name: str, lang
         msg = t(chaos_key, lang, lender=lender_name, debtor=f"@{target_name}")
         return {"ok": False, "text": msg}
 
-    amount = target["debt"]
-    money_fmt = format_money(amount, lang)
+    total_lent = await get_total_lent_to_target(lender_id, target_name)
+    if total_lent <= 0:
+        return {
+            "ok": False,
+            "text": t("nagih_not_creditor", lang, username=target_name),
+        }
 
-    ach_msgs = await apply_nagih(lender_id, target_name, amount, lang)
+    interest_profit = await get_interest_profit_for_lender(lender_id, target_name)
+    entitled = total_lent + interest_profit
+    collect_amount = min(target["debt"], entitled)
+
+    money_fmt = format_money(collect_amount, lang)
+
+    ach_msgs = await apply_nagih(lender_id, target_name, collect_amount, lang)
 
     target_is_ghost = target.get("is_ghost", 0) == 1
     notif_result = await send_notification(
@@ -114,7 +126,15 @@ async def execute_nagih(lender_id: int, lender_name: str, target_name: str, lang
 
 
 async def execute_jebak(trapper_id: int, trapper_name: str, target_name: str, lang: str, context=None) -> dict:
+    from services.market_service import has_active_shield
+
     target = await get_or_create_by_username(target_name)
+
+    if await has_active_shield(target["id"], "anti_trap"):
+        return {
+            "ok": False,
+            "text": f"🛡️ @{target_name} memiliki *Basic Shield*! Jebakan tidak mempan.",
+        }
 
     result = calculate_trap()
     money_fmt = format_money(result["amount"], lang)

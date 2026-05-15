@@ -337,11 +337,35 @@ CREATE TABLE IF NOT EXISTS user_gems (
     user_id         BIGINT PRIMARY KEY,
     balance         INTEGER DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS cooldowns (
+    user_id   BIGINT NOT NULL,
+    command   TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, command)
+);
+CREATE TABLE IF NOT EXISTS rate_limits (
+    user_id   BIGINT NOT NULL,
+    api_key   TEXT NOT NULL,
+    count     INTEGER DEFAULT 1,
+    window_start INTEGER NOT NULL,
+    PRIMARY KEY (user_id, api_key, window_start)
+);
 """
         else:
             sql = SQLITE_SCHEMA
         await conn.executescript(sql)
         await conn.commit()
+
+        for migration in MIGRATIONS:
+            try:
+                if DB_BACKEND == "postgres":
+                    await conn.execute(migration["postgres"])
+                else:
+                    await conn.execute(migration["sqlite"])
+                await conn.commit()
+            except Exception:
+                pass
+
         await seed_default_data(conn)
         logger.info(f"Database initialized ({DB_BACKEND})")
     except Exception as e:
@@ -349,6 +373,14 @@ CREATE TABLE IF NOT EXISTS user_gems (
         raise
     finally:
         await conn.close()
+
+
+MIGRATIONS = [
+    {
+        "sqlite": "ALTER TABLE users ADD COLUMN last_interest_calc TEXT",
+        "postgres": "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_interest_calc TEXT",
+    },
+]
 
 
 async def seed_default_data(conn):
@@ -692,5 +724,18 @@ CREATE TABLE IF NOT EXISTS purchases (
 CREATE TABLE IF NOT EXISTS user_gems (
     user_id         INTEGER PRIMARY KEY,
     balance         INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS cooldowns (
+    user_id   INTEGER NOT NULL,
+    command   TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, command)
+);
+CREATE TABLE IF NOT EXISTS rate_limits (
+    user_id   INTEGER NOT NULL,
+    api_key   TEXT NOT NULL,
+    count     INTEGER DEFAULT 1,
+    window_start INTEGER NOT NULL,
+    PRIMARY KEY (user_id, api_key, window_start)
 );
 """
