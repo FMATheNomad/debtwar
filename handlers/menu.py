@@ -491,11 +491,19 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif data == "npc_show":
             _push_nav(context, "social_menu")
-            await query.edit_message_text(
-                "🤖 Gunakan: /npc <id> <action>\n"
-                "Contoh: /npc loan_shark borrow",
-                reply_markup=back_to_main_keyboard(lang),
-            )
+            npcs = [
+                ("loan_shark", "🧛 Boris si Rentenir", "Pinjaman kilat, bunga tinggi"),
+                ("mafia_boss", "🕴️ Don Corleone", "Misi-misi gelap"),
+                ("scammer", "🐍 Jimmy Tipu", "Ahli phishing"),
+                ("collector", "💪 Rambo Collector", "Bantu nagih utang orang"),
+            ]
+            lines = ["🤖 *NPC Interaktif*\n"]
+            for nid, name, desc in npcs:
+                lines.append(f"• `{nid}` — {name}")
+                lines.append(f"  {desc}")
+                lines.append(f"  Gunakan: `/npc {nid}`\n")
+            lines.append("Contoh: `/npc loan_shark borrow` — pinjem duit")
+            await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
 
         elif data.startswith("npc_"):
             pass

@@ -321,9 +321,6 @@ def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("🤖 NPC", callback_data="npc_show"),
         ],
         [
-            InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
-        ],
-        [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
         ],
     ]
