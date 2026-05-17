@@ -24,8 +24,11 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("💹 Investasi", callback_data="invest_show"),
         ],
         [
+            InlineKeyboardButton("📇 Contacts", callback_data="social_contacts"),
+            InlineKeyboardButton("🔗 Invite", callback_data="social_invite"),
+        ],
+        [
             InlineKeyboardButton("🏴 Social", callback_data="social_menu"),
-            InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_faq", lang), callback_data="faq_show"),
@@ -316,6 +319,9 @@ def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("🔗 Invite", callback_data="social_invite"),
             InlineKeyboardButton("📇 Contacts", callback_data="social_contacts"),
+        ],
+        [
+            InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
