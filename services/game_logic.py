@@ -122,6 +122,11 @@ async def execute_nagih(lender_id: int, lender_name: str, target_name: str, lang
     chaos_key = random.choice(NAGIH_SUCCESS_KEYS)
     msg = t(chaos_key, lang, lender=lender_name, debtor=f"@{target_name}", amount=money_fmt)
 
+    try:
+        await add_contact(lender_id, target["id"])
+    except Exception:
+        pass
+
     if notif_result:
         msg += f"\n\n{notif_result}"
     if ach_msgs:
@@ -197,6 +202,11 @@ async def execute_jebak(trapper_id: int, trapper_name: str, target_name: str, la
 
         if notif_result:
             msg += f"\n\n{notif_result}"
+
+    try:
+        await add_contact(trapper_id, target["id"])
+    except Exception:
+        pass
 
     return {"ok": True, "text": msg}
 

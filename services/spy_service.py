@@ -1,7 +1,7 @@
 import logging
 import random
 from database.db import get_connection
-from database.user_repo import get_user_full, update_balance
+from database.user_repo import get_user_full, update_balance, add_contact
 from services.credit_service import get_credit_tier
 from config import SPY_SUCCESS_RATE, SPY_DETECTION_RATE, SPY_FAIL_FINE
 from utils.translator import t
@@ -51,6 +51,10 @@ async def execute_spy(spy_id: int, target_name: str, lang: str) -> dict:
         )
 
         await log_spy(spy_id, target["id"], True, False)
+        try:
+            await add_contact(spy_id, target["id"])
+        except Exception:
+            pass
         return {"ok": True, "text": text}
 
     else:

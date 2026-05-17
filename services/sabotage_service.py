@@ -1,6 +1,6 @@
 import logging
 import random
-from database.user_repo import get_user_full, update_balance, get_user_by_username, set_user_field
+from database.user_repo import get_user_full, update_balance, get_user_by_username, set_user_field, add_contact
 from services.credit_service import get_credit_tier
 from config import SABOTAGE_SUCCESS_RATE, SABOTAGE_FAIL_FINE, SABOTAGE_STEAL_MIN, SABOTAGE_STEAL_MAX, SABOTAGE_FREEZE_SECONDS
 from utils.translator import t
@@ -58,6 +58,10 @@ async def execute_sabotage(attacker_id: int, target_name: str, sabo_type: str, l
     else:
         return {"ok": False, "text": t("sabotage_unknown_type", lang)}
 
+    try:
+        await add_contact(attacker_id, target_id)
+    except Exception:
+        pass
     await log_sabotage(attacker_id, target_id, sabo_type, True)
     return {"ok": True, "text": result_text}
 
