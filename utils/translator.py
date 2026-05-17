@@ -222,8 +222,8 @@ _translations = {
         "en": "💣 BOOM! {target} trapped by {trapper}. Debt +{amount}. {trapper} got {reward} commission.",
     },
     "jebak_success_3": {
-        "id": "🎭 Drama Debt War: {trapper} jadi villain, {target} jadi korban. {trapper} dapet {reward}.",
-        "en": "🎭 Debt War drama: {trapper} is the villain, {target} is the victim. {trapper} got {reward}.",
+        "id": "🎭 Drama Debt War: {trapper} jadi villain, {target} jadi korban. Debt +{amount}! {trapper} dapet {reward}.",
+        "en": "🎭 Debt War drama: {trapper} is the villain, {target} is the victim. Debt +{amount}! {trapper} got {reward}.",
     },
     "jebak_success_4": {
         "id": "🐀 {target} masuk perangkap {trapper}. {trapper} cuan {reward} dari hasil jebakan!",
@@ -512,52 +512,24 @@ _translations = {
     },
     "welcome_game_desc": {
         "id": (
-            "\n\n\u2694\ufe0f *Debt War* \u2014 Social Chaos Economy MMO di Telegram!\n\n"
-            "\U0001f4cc *Fitur Utama:*\n"
-            "\u2022 \U0001f4b8 Pinjam / tagih utang (/utang, /nagih, /lunas)\n"
-            "\u2022 🎯 Main tanpa @username: reply pesan + command!\n"
-            "\u2022 \U0001faa4 Jebakan + 5 Advanced Traps (/jebak, /trap)\n"
-            "\u2022 \U0001f381 Daily reward + streak bonus (/daily)\n"
-            "\u2022 \U0001f4c8 Bunga 5%/hari + Credit Score 0-1000\n"
-            "\u2022 \U0001f3e6 Bank: deposit/withdraw + bunga 2%\n"
-            "\u2022 \U0001f3b2 Casino: Slots, Blackjack, Roulette (18+)\n"
-            "\u2022 \U0001f3ea Market: shield, booster, tools\n"
-            "\u2022 \U0001f4a3 Spy + Sabotage (freeze/steal/block)\n"
-            "\u2022 \U0001f3c6 8 Achievements + 10 Title/Rank\n"
-            "\u2022 \U0001f3b1 Lootbox: 4 rarity (common\u2192legendary)\n"
-            "\u2022 \U0001f9ea Gang/War + Vault + Reputation\n"
-            "\u2022 \U0001f9d1\u200d\u2642\ufe0f 4 NPC interaktif + Misi\n"
-            "\u2022 \U0001f3db\ufe0f Pengadilan + voting + denda\n"
-            "\u2022 \U0001f3ad World News + Event global\n"
-            "\u2022 \U0001f4c8 Investasi saham, reksadana, obligasi\n"
-            "\u2022 \U0001f4cb Riwayat transaksi + saldo (/history)\n"
-            "\u2022 \U0001f3af Season 30 hari + Leaderboard\n\n"
-            "\U0001f6a9 *Peringatan:* Casino & lootbox hanya untuk hiburan. 18+.\n"
-            "Bermainlah dengan bijak dan bertanggung jawab.\n\n"
-            "Gunakan tombol di bawah untuk navigasi \U0001f447"
+            "\n\n⚔️ *Debt War* — Game Ngutang-Ngutangan!\n\n"
+            "💰 Kamu punya *Rp1.000*. Pinjemin ke temen, dapet bunga 5%/hari.\n\n"
+            "▸ *Reply pesan temen* + ketik `/utang 200`\n"
+            "▸ Kalo dia gak bayar, reply + `/nagih`\n"
+            "▸ Mau jahili? reply + `/jebak` — target kena debt, lo dapet duit\n\n"
+            "💸 Gak punya duit? `/daily` gratisan tiap hari.\n"
+            "🔥 `/menu` buat fitur lain: bank, casino, gang, dll.\n"
+            "❓ `/faq` kalo bingung."
         ),
         "en": (
-            "\n\n\u2694\ufe0f *Debt War* \u2014 Social Chaos Economy MMO on Telegram!\n\n"
-            "\U0001f4cc *Main Features:*\n"
-            "\u2022 \U0001f4b8 Lend / Collect / Pay debt (/utang, /nagih, /lunas)\n"
-            "\u2022 🎯 Play without @username: reply to message + command!\n"
-            "\u2022 \U0001faa4 Traps + 5 Advanced Traps (/jebak, /trap)\n"
-            "\u2022 \U0001f381 Daily reward + streak bonus (/daily)\n"
-            "\u2022 \U0001f4c8 5% interest + Credit Score 0-1000\n"
-            "\u2022 \U0001f3e6 Bank: deposit/withdraw + 2% interest\n"
-            "\u2022 \U0001f3b2 Casino: Slots, Blackjack, Roulette (18+)\n"
-            "\u2022 \U0001f3ea Market: shields, boosters, tools\n"
-            "\u2022 \U0001f4a3 Spy + Sabotage (freeze/steal/block)\n"
-            "\u2022 \U0001f3c6 8 Achievements + 10 Title/Ranks\n"
-            "\u2022 \U0001f3b1 Lootbox: 4 rarities (common\u2192legendary)\n"
-            "\u2022 \U0001f9ea Gangs/Wars + Vault + Reputation\n"
-            "\u2022 \U0001f9d1\u200d\u2642\ufe0f 4 Interactive NPCs + Missions\n"
-            "\u2022 \U0001f3db\ufe0f Court + voting + fines\n"
-            "\u2022 \U0001f3ad World News + Global events\n"
-            "\u2022 \U0001f3af 30-day Season + Leaderboard\n\n"
-            "\U0001f6a9 *Warning:* Casino & lootbox are for entertainment only. 18+.\n"
-            "Play responsibly.\n\n"
-            "Use the buttons below to navigate \U0001f447"
+            "\n\n⚔️ *Debt War* — The Debt Lending Game!\n\n"
+            "💰 You have *$1.000*. Lend it to friends, earn 5% daily interest.\n\n"
+            "▸ *Reply to their message* + type `/utang 200`\n"
+            "▸ If they don't pay, reply + `/nagih`\n"
+            "▸ Wanna be evil? reply + `/jebak` — target gets debt, you get paid\n\n"
+            "💸 No money? `/daily` is free every day.\n"
+            "🔥 `/menu` for more: bank, casino, gang, etc.\n"
+            "❓ `/faq` if you're stuck."
         ),
     },
     # ── GHOST NOTIFICATIONS ──
@@ -581,6 +553,54 @@ _translations = {
     "faq_title": {
         "id": "❓ *Bantuan Debt War*",
         "en": "❓ *Debt War Help*",
+    },
+    "faq_howtoplay": {
+        "id": (
+            "\n\n🎮 *CARA MAIN*\n\n"
+            "1️⃣ *Dapetin duit*\n"
+            "‣ `/daily` — gratis tiap hari (Rp50-200)\n"
+            "‣ `/profile` cek saldo & utang lo\n\n"
+            "2️⃣ *Pinjemin ke orang*\n"
+            "‣ *Reply pesan* temen + `/utang 200` (gausah @username)\n"
+            "‣ Duit lo turun 200, utang temen lo naik 200\n"
+            "‣ Tiap hari utangnya naik 5% (bunga)\n\n"
+            "3️⃣ *Tagih balik*\n"
+            "‣ Reply + `/nagih` — ambil semua utang + bunga\n"
+            "‣ Lo dapet duit lo balik + untung dari bunga\n\n"
+            "4️⃣ *Atau jadi biang onar*\n"
+            "‣ `/jebak` — kasi utang ke musuh, lo dapet komisi\n"
+            "‣ `/spy` — intip saldo & utang target\n"
+            "‣ `/sabotage` — freeze/curi/block daily target\n\n"
+            "5️⃣ *Kalo boncos*\n"
+            "‣ `/bank deposit` — nyimpen duit, dapet bunga 2%\n"
+            "‣ `/casino` — gamble (tapi hati-hati, house edge 15%)\n"
+            "‣ Kalo utang > Rp10.000 → *BANGKRUT* (reset + lock 24 jam)\n\n"
+            "🔥 *Tips:* Reply pesan orang = gak perlu @username!\n"
+            "💡 `/invite` buat ngajak temen main."
+        ),
+        "en": (
+            "\n\n🎮 *HOW TO PLAY*\n\n"
+            "1️⃣ *Get money*\n"
+            "‣ `/daily` — free every day ($50-200)\n"
+            "‣ `/profile` check balance & debt\n\n"
+            "2️⃣ *Lend to people*\n"
+            "‣ *Reply to message* + `/utang 200` (no @username needed)\n"
+            "‣ Your money -200, their debt +200\n"
+            "‣ Debt grows 5% daily (interest)\n\n"
+            "3️⃣ *Collect your debt*\n"
+            "‣ Reply + `/nagih` — take all debt + interest\n"
+            "‣ You get your money back + profit\n\n"
+            "4️⃣ *Or be a menace*\n"
+            "‣ `/jebak` — give debt to enemies, earn commission\n"
+            "‣ `/spy` — check target's balance & debt\n"
+            "‣ `/sabotage` — freeze/steal/block daily reward\n\n"
+            "5️⃣ *If you're broke*\n"
+            "‣ `/bank deposit` — save money, earn 2% interest\n"
+            "‣ `/casino` — gamble (but careful, 15% house edge)\n"
+            "‣ Debt > $10.000 → *BANKRUPTCY* (reset + 24h lock)\n\n"
+            "🔥 *Tip:* Reply to message = no @username needed!\n"
+            "💡 `/invite` to invite friends."
+        ),
     },
     "faq_commands": {
         "id": (
@@ -770,6 +790,7 @@ _translations = {
     "faq_btn_commands": {"id": "📌 Commands", "en": "📌 Commands"},
     "faq_btn_economy": {"id": "💰 Economy", "en": "💰 Economy"},
     "faq_btn_tips": {"id": "🔥 Tips", "en": "🔥 Tips"},
+    "faq_btn_howtoplay": {"id": "🎮 Cara Main", "en": "🎮 How To Play"},
     "faq_btn_tagging": {"id": "🎯 Cara Tagging", "en": "🎯 How To Tag"},
 
     "faq_tagging": {

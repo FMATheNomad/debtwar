@@ -180,6 +180,7 @@ async def apply_daily_reward(user_id: int, lang: str) -> dict:
     await set_user_field(user_id, "last_daily", now.strftime("%Y-%m-%d %H:%M:%S"))
     await update_user_stat(user_id, "total_daily_claimed")
     await modify_credit_score(user_id, CREDIT_DAILY_ACTIVITY_BONUS)
+    await add_transaction(user_id, "system", "daily", total_reward)
 
     msg = t("daily_success", lang, amount=format_money(total_reward, lang), streak=new_streak)
     if bonus > 0 and new_streak > 1:

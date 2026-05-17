@@ -29,6 +29,7 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("🏴 Social", callback_data="social_menu"),
+            InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_faq", lang), callback_data="faq_show"),
@@ -110,11 +111,14 @@ def profile_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def faq_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
+            InlineKeyboardButton(t("faq_btn_howtoplay", lang), callback_data="faq_howtoplay"),
             InlineKeyboardButton(t("faq_btn_commands", lang), callback_data="faq_commands"),
-            InlineKeyboardButton(t("faq_btn_economy", lang), callback_data="faq_economy"),
         ],
         [
+            InlineKeyboardButton(t("faq_btn_economy", lang), callback_data="faq_economy"),
             InlineKeyboardButton(t("faq_btn_tips", lang), callback_data="faq_tips"),
+        ],
+        [
             InlineKeyboardButton(t("faq_btn_tagging", lang), callback_data="faq_tagging"),
         ],
         [
@@ -315,10 +319,6 @@ def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("🏛️ Court", callback_data="court_show"),
             InlineKeyboardButton("🤖 NPC", callback_data="npc_show"),
-        ],
-        [
-            InlineKeyboardButton("🔗 Invite", callback_data="social_invite"),
-            InlineKeyboardButton("📇 Contacts", callback_data="social_contacts"),
         ],
         [
             InlineKeyboardButton("📰 World News", callback_data="world_news_show"),

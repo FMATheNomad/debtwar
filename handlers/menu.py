@@ -234,16 +234,35 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         elif data == "social_invite":
-            from handlers.invite import cmd_invite
-            update = query
-            context.args = []
-            await cmd_invite(update, context)
+            from database.user_repo import create_invite_code
+            await query.answer()
+            code = await create_invite_code(user.id)
+            bot_user = await context.bot.get_me()
+            link = f"https://t.me/{bot_user.username}?start={code}"
+            await query.edit_message_text(
+                f"🔗 *Invite Link*\n\n"
+                f"Kirim link ini ke temenmu:\n`{link}`",
+                parse_mode="Markdown",
+                reply_markup=back_to_main_keyboard(lang),
+            )
+            return
 
         elif data == "social_contacts":
-            from handlers.invite import cmd_contacts
-            update = query
-            context.args = []
-            await cmd_contacts(update, context)
+            from database.user_repo import get_connections, get_user_by_id
+            await query.answer()
+            conns = await get_connections(user.id)
+            if not conns:
+                text = "📇 *Contacts*\n\nKamu belum punya koneksi.\nGunakan `/invite` buat ngajak temen!"
+            else:
+                lines = ["📇 *Contacts*\n"]
+                for c in conns[:20]:
+                    other = await get_user_by_id(c["other_id"])
+                    if other:
+                        name = other.get("display_name") or other.get("username") or f"User#{other['id']}"
+                        lines.append(f"• `{other['id']}` — {name}")
+                text = "\n".join(lines)
+            await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
+            return
 
         elif data == "gang_menu":
             _push_nav(context, "social_menu")

@@ -326,15 +326,21 @@ async def add_daily_limit(user_id: int, limit_type: str, amount: int):
 async def unlock_achievement(user_id: int, ach_id: str) -> bool:
     conn = await get_connection()
     try:
+        async with conn.execute(
+            "SELECT 1 FROM achievements WHERE user_id = ? AND ach_id = ?",
+            (user_id, ach_id),
+        ) as cur:
+            already = await cur.fetchone()
+        if already:
+            return False
         await conn.execute(
-            "INSERT OR IGNORE INTO achievements (user_id, ach_id) VALUES (?, ?)",
+            "INSERT INTO achievements (user_id, ach_id) VALUES (?, ?)",
             (user_id, ach_id),
         )
         await conn.commit()
-        async with conn.execute(
-            "SELECT changes()"
-        ) as cur:
-            return (await cur.fetchone())[0] > 0
+        return True
+    except Exception:
+        return False
     finally:
         await conn.close()
 

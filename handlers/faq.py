@@ -32,6 +32,7 @@ async def faq_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     sections = {
         "faq_show": "faq_title",
+        "faq_howtoplay": "faq_howtoplay",
         "faq_commands": "faq_commands",
         "faq_economy": "faq_economy",
         "faq_tips": "faq_tips",
