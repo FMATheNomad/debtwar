@@ -44,12 +44,15 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
     if not user:
         return {"ok": False, "text": t("not_registered", lang)}
 
+    from database.user_repo import add_transaction
+
     if npc_id == "loan_shark":
         if action == "borrow":
             amount = random.randint(100, NPC_LOAN_SHARK_MAX)
             await update_balance(user_id, amount)
             await update_debt(user_id, int(amount * (1 + NPC_LOAN_SHARK_INTEREST)))
             await log_interaction(user_id, npc_id, "borrow", amount)
+            await add_transaction(user_id, f"npc_{npc_id}", "borrow", amount)
             return {
                 "ok": True,
                 "text": f"🧛 *{npc['name']}*\n\n"
@@ -67,6 +70,7 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             await update_balance(user_id, -debt)
             await update_debt(user_id, -debt)
             await log_interaction(user_id, npc_id, "pay", debt)
+            await add_transaction(user_id, f"npc_{npc_id}", "pay", debt)
             return {
                 "ok": True,
                 "text": f"🧛 *{npc['name']}*\n\n"
@@ -79,6 +83,7 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             reward = random.randint(NPC_MISSION_REWARD_MIN, NPC_MISSION_REWARD_MAX)
             await update_balance(user_id, reward)
             await log_interaction(user_id, npc_id, "mission", reward)
+            await add_transaction(user_id, f"npc_{npc_id}", "mission", reward)
             missions = [
                 "Bakar warung saingan",
                 "Tagih utang ke Debtor",
@@ -100,6 +105,7 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 loss = random.randint(50, 200)
                 await update_balance(user_id, -loss)
                 await log_interaction(user_id, npc_id, "phish_fail", -loss)
+                await add_transaction(user_id, f"npc_{npc_id}", "phish_fail", loss)
                 return {
                     "ok": True,
                     "text": f"🐍 *{npc['name']}*\n\n"
@@ -109,6 +115,7 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 gain = random.randint(30, 150)
                 await update_balance(user_id, gain)
                 await log_interaction(user_id, npc_id, "phish_success", gain)
+                await add_transaction(user_id, f"npc_{npc_id}", "phish_success", gain)
                 return {
                     "ok": True,
                     "text": f"🐍 *{npc['name']}*\n\n"
@@ -132,6 +139,7 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             await update_balance(user_id, net)
             await update_debt(target["id"], -amount)
             await log_interaction(user_id, npc_id, "collect", net)
+            await add_transaction(user_id, f"npc_{npc_id}", "collect", net)
             return {
                 "ok": True,
                 "text": f"💪 *{npc['name']}*\n\n"
