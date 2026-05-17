@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from utils.translator import t
-from utils.helpers import get_username_or_fallback, parse_mention
+from utils.helpers import get_username_or_fallback, parse_mention, resolve_target
 from utils.keyboards import back_to_main_keyboard
 from database.user_repo import register_user
 from services.cooldown_service import check_cooldown
@@ -24,10 +24,29 @@ async def cmd_sabotage(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} sabotage cooldown.")
         return
 
-    if len(context.args) < 2:
+    reply = update.message.reply_to_message
+    sabo_type = None
+    target_name = None
+
+    if reply and reply.from_user and not reply.from_user.is_bot:
+        tuser = reply.from_user
+        if tuser.id == user.id:
+            await update.message.reply_text(t("self_sabotage", lang))
+            return
+        target_name = get_username_or_fallback(tuser)
+        await register_user(tuser.id, target_name, lang)
+        if context.args:
+            sabo_type = context.args[0].lower()
+    elif len(context.args) >= 2:
+        sabo_type = context.args[0].lower()
+        target_name = parse_mention(context.args[1])
+        if target_name.lower() == uname.lower():
+            await update.message.reply_text(t("self_sabotage", lang))
+            return
+    else:
         await update.message.reply_text(
             f"💣 *Sabotage System*\n\n"
-            f"Gunakan: /sabotage <type> @username\n\n"
+            f"Reply pesan target atau ketik:\n/sabotage <type> @username\n\n"
             f"Tipe:\n"
             f"• `freeze` — Freeze balance target (1 jam)\n"
             f"• `steal` — Curi uang target\n"
@@ -38,15 +57,8 @@ async def cmd_sabotage(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    sabo_type = context.args[0].lower()
-    target_name = parse_mention(context.args[1])
-
     if sabo_type not in ("freeze", "steal", "block_daily"):
         await update.message.reply_text(t("sabotage_unknown_type", lang))
-        return
-
-    if target_name.lower() == uname.lower():
-        await update.message.reply_text(t("self_sabotage", lang))
         return
 
     from database.user_repo import get_user_full, update_balance

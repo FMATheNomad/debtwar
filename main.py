@@ -41,6 +41,7 @@ from handlers.investment import cmd_invest_buy, cmd_invest_sell
 from handlers.court import cmd_court
 from handlers.lunas import cmd_lunas
 from handlers.setname import cmd_setname
+from handlers.invite import cmd_invite, cmd_contacts, cmd_player
 from utils.translator import t
 from utils.keyboards import main_menu_keyboard, chaos_menu_keyboard
 from services.interest_service import process_interest_for_all
@@ -287,6 +288,9 @@ def main():
     app.add_handler(CommandHandler("name", cmd_setname))
     app.add_handler(CommandHandler("investbuy", cmd_invest_buy))
     app.add_handler(CommandHandler("investsell", cmd_invest_sell))
+    app.add_handler(CommandHandler("invite", cmd_invite))
+    app.add_handler(CommandHandler("contacts", cmd_contacts))
+    app.add_handler(CommandHandler("player", cmd_player))
     # app.add_handler(CommandHandler("shop", cmd_shop))
     # app.add_handler(PreCheckoutQueryHandler(pre_checkout))
     # app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))

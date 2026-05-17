@@ -12,7 +12,7 @@ from database.user_repo import (
     get_user, get_user_full, get_or_create_by_username,
     update_balance, update_debt, update_debt_by_username,
     check_daily_limit, add_daily_limit, add_transaction,
-    add_ghost_notification,
+    add_ghost_notification, add_connection,
 )
 
 from services.notification import send_notification
@@ -71,6 +71,11 @@ async def execute_utang(lender_id: int, lender_name: str, target_name: str, amou
 
     if notif_result:
         msg += f"\n\n{notif_result}"
+
+    try:
+        await add_connection(lender_id, target["id"])
+    except Exception:
+        pass
 
     if ach_msgs:
         msg += "\n\n" + "\n".join(ach_msgs)
@@ -227,6 +232,11 @@ async def execute_transfer(sender_id: int, sender_name: str, target_name: str, a
         context=context,
         is_ghost=target.get("is_ghost", 0) == 1,
     )
+
+    try:
+        await add_connection(sender_id, target["id"])
+    except Exception:
+        pass
 
     msg = t("transfer_success", lang, amount=money_fmt, target=target_name)
     if notif_result:

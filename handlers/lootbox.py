@@ -8,6 +8,7 @@ from utils.disclaimer import LOOTBOX_DISCLAIMER
 from database.user_repo import register_user
 from services.lootbox_service import buy_lootbox, open_lootbox, get_lootbox_inventory
 from config import LOOTBOX_PRICES
+from utils.formatter import format_money
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ async def cmd_lootbox(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "🎁 *Lootbox System*\n\n"
         text += "*Harga:*\n"
         for rarity, price in LOOTBOX_PRICES.items():
-            text += f"• {rarity.upper()}: {price}💰\n"
+            text += f"• {rarity.upper()}: {format_money(price, lang)}💰\n"
 
         text += "\n*Inventory:*\n"
         if inv:

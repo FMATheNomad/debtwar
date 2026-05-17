@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 
 from database.user_repo import register_user, get_user, update_balance, update_debt_by_username, add_transaction, check_daily_limit, add_daily_limit
 from utils.translator import t
-from utils.helpers import get_username_or_fallback, parse_mention
+from utils.helpers import get_username_or_fallback, parse_mention, resolve_target
 from utils.formatter import format_money
 from utils.keyboards import back_to_main_keyboard
 from services.cooldown_service import check_cooldown
@@ -41,23 +41,42 @@ async def cmd_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(msg)
         return
 
-    if len(context.args) < 2:
-        await update.message.reply_text(t("invalid_format_transfer", lang))
-        return
+    target_name = None
+    amount = None
+    reply = update.message.reply_to_message
 
-    target_name = parse_mention(context.args[0])
-    try:
-        amount = int(context.args[1])
-    except ValueError:
-        await update.message.reply_text(t("amount_must_be_number", lang))
+    if reply and reply.from_user and not reply.from_user.is_bot:
+        tuser = reply.from_user
+        if tuser.id == sender.id:
+            await update.message.reply_text(t("self_transfer", lang))
+            return
+        target_name = get_username_or_fallback(tuser)
+        await register_user(tuser.id, target_name, lang)
+        if context.args:
+            try:
+                amount = int(context.args[0])
+            except ValueError:
+                await update.message.reply_text(t("amount_must_be_number", lang))
+                return
+    elif len(context.args) >= 2:
+        target_name = parse_mention(context.args[0])
+        if target_name.lower() == sender_uname.lower():
+            await update.message.reply_text(t("self_transfer", lang))
+            return
+        try:
+            amount = int(context.args[1])
+        except ValueError:
+            await update.message.reply_text(t("amount_must_be_number", lang))
+            return
+    else:
+        await update.message.reply_text(
+            "Reply pesan target + jumlah, atau ketik:\n`/transfer @username <jumlah>`",
+            parse_mode="Markdown",
+        )
         return
 
     if amount <= 0:
         await update.message.reply_text(t("amount_positive", lang))
-        return
-
-    if target_name.lower() == sender_uname.lower():
-        await update.message.reply_text(t("self_transfer", lang))
         return
 
     sender_row = await get_user(sender.id)

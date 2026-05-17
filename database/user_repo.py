@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import date
 from database.db import get_connection
@@ -533,5 +534,78 @@ async def link_ghost_by_username(username: str, user_id: int) -> bool:
             logger.info(f"Linked ghost @{username} to user_id {user_id}")
             return True
         return False
+    finally:
+        await conn.close()
+
+
+async def add_connection(uid_a: int, uid_b: int):
+    if uid_a == uid_b:
+        return
+    a, b = (uid_a, uid_b) if uid_a < uid_b else (uid_b, uid_a)
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "INSERT OR IGNORE INTO connections (user_id_a, user_id_b) VALUES (?, ?)",
+            (a, b),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def get_connections(user_id: int) -> list:
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT user_id_a, user_id_b, connected_at FROM connections WHERE user_id_a = ? OR user_id_b = ? ORDER BY connected_at DESC",
+            (user_id, user_id),
+        ) as cur:
+            rows = await cur.fetchall()
+        result = []
+        for r in rows:
+            other_id = r["user_id_b"] if r["user_id_a"] == user_id else r["user_id_a"]
+            result.append({"other_id": other_id, "connected_at": r["connected_at"]})
+        return result
+    finally:
+        await conn.close()
+
+
+async def create_invite_code(owner_id: int) -> str:
+    import hashlib, time
+    raw = f"{owner_id}_{time.time()}_{os.urandom(4).hex()}"
+    code = "inv_" + hashlib.sha256(raw.encode()).hexdigest()[:8]
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "INSERT OR IGNORE INTO invite_codes (code, owner_id) VALUES (?, ?)",
+            (code, owner_id),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+    return code
+
+
+async def get_invite_owner(code: str):
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT owner_id, created_at FROM invite_codes WHERE code = ?", (code,)
+        ) as cur:
+            row = await cur.fetchone()
+            return dict(row) if row else None
+    finally:
+        await conn.close()
+
+
+async def get_user_by_id(user_id: int):
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT id, username, balance, debt, language, display_name FROM users WHERE id = ?",
+            (user_id,),
+        ) as cur:
+            row = await cur.fetchone()
+            return dict(row) if row else None
     finally:
         await conn.close()

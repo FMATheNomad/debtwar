@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from utils.translator import t
-from utils.helpers import get_username_or_fallback, parse_mention
+from utils.helpers import get_username_or_fallback, parse_mention, resolve_target
 from utils.keyboards import back_to_main_keyboard
 from database.user_repo import register_user
 from services.cooldown_service import check_cooldown
@@ -24,11 +24,14 @@ async def cmd_spy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⏳ {t('wait', lang)} {remaining} {t('seconds', lang)} spy cooldown.")
         return
 
-    if not context.args:
+    target_name = None
+    reply = update.message.reply_to_message
+    if not context.args and not reply:
         stats = await get_spy_stats(user.id)
         await update.message.reply_text(
             f"🕵️ *Spy System*\n\n"
             f"Gunakan: /spy @username\n"
+            f"Atau reply pesan target + /spy\n"
             f"Biaya: {format_money(SPY_COST, lang)}\n\n"
             f"📊 Spy Stats: {stats['total']} total | {stats['successes']} sukses | {stats['failures']} gagal",
             parse_mode="Markdown",
@@ -36,9 +39,19 @@ async def cmd_spy(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    target_name = parse_mention(context.args[0])
-    if target_name.lower() == uname.lower():
-        await update.message.reply_text(t("self_spy", lang))
+    if reply and reply.from_user and not reply.from_user.is_bot:
+        tuser = reply.from_user
+        if tuser.id == user.id:
+            await update.message.reply_text(t("self_spy", lang))
+            return
+        target_name = get_username_or_fallback(tuser)
+        await register_user(tuser.id, target_name, lang)
+    elif context.args:
+        target_name = parse_mention(context.args[0])
+        if target_name.lower() == uname.lower():
+            await update.message.reply_text(t("self_spy", lang))
+            return
+    else:
         return
 
     from database.user_repo import get_user_full

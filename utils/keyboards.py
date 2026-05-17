@@ -112,6 +112,7 @@ def faq_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(t("faq_btn_tips", lang), callback_data="faq_tips"),
+            InlineKeyboardButton(t("faq_btn_tagging", lang), callback_data="faq_tagging"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -302,6 +303,7 @@ def court_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 
 def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
+    from utils.translator import t as _t
     keyboard = [
         [
             InlineKeyboardButton("🏴 Gang", callback_data="gang_menu"),
@@ -310,6 +312,10 @@ def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("🏛️ Court", callback_data="court_show"),
             InlineKeyboardButton("🤖 NPC", callback_data="npc_show"),
+        ],
+        [
+            InlineKeyboardButton("🔗 Invite", callback_data="social_invite"),
+            InlineKeyboardButton("📇 Contacts", callback_data="social_contacts"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),

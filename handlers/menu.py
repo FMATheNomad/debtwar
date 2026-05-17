@@ -13,6 +13,8 @@ from utils.keyboards import (
 )
 from database.user_repo import get_leaderboard, get_leaderboard_chaos_detail
 from services.economy import apply_daily_reward
+from utils.formatter import format_money
+from config import SPY_COST, SPY_FAIL_FINE, SABOTAGE_COST, SABOTAGE_FAIL_FINE, SABOTAGE_STEAL_MIN, SABOTAGE_STEAL_MAX, LOOTBOX_PRICES
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +233,18 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=social_menu_keyboard(lang),
             )
 
+        elif data == "social_invite":
+            from handlers.invite import cmd_invite
+            update = query
+            context.args = []
+            await cmd_invite(update, context)
+
+        elif data == "social_contacts":
+            from handlers.invite import cmd_contacts
+            update = query
+            context.args = []
+            await cmd_contacts(update, context)
+
         elif data == "gang_menu":
             _push_nav(context, "social_menu")
             await query.edit_message_text(
@@ -304,10 +318,10 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 "🕵️ *Spy System*\n\n"
                 "Lihat estimasi saldo & utang target.\n\n"
-                "• Biaya: *Rp100*\n"
+                f"• Biaya: *{format_money(SPY_COST, lang)}*\n"
                 "• Cooldown: 2 menit\n"
                 "• Success rate: 70%\n"
-                "• Gagal: kena denda Rp50\n"
+                f"• Gagal: kena denda {format_money(SPY_FAIL_FINE, lang)}\n"
                 "• Terdeteksi: target dapat notifikasi\n\n"
                 "Gunakan: `/spy @username`",
                 parse_mode="Markdown",
@@ -320,12 +334,12 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "💣 *Sabotage System*\n\n"
                 "Tipe:\n"
                 "• `freeze` — freeze akun target 1 jam\n"
-                "• `steal` — curi saldo target (Rp20-100)\n"
+                f"• `steal` — curi saldo target ({format_money(SABOTAGE_STEAL_MIN, lang)}-{format_money(SABOTAGE_STEAL_MAX, lang)})\n"
                 "• `block_daily` — block daily reward target\n\n"
-                "• Biaya: *Rp150*\n"
+                f"• Biaya: *{format_money(SABOTAGE_COST, lang)}*\n"
                 "• Cooldown: 5 menit\n"
                 "• Success rate: 55%\n"
-                "• Gagal: kena denda Rp80\n\n"
+                f"• Gagal: kena denda {format_money(SABOTAGE_FAIL_FINE, lang)}\n\n"
                 "Gunakan: `/sabotage <type> @username`",
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
@@ -353,13 +367,17 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif data == "chaos_lootbox":
             _push_nav(context, "menu_chaos")
             from utils.disclaimer import LOOTBOX_DISCLAIMER
+            lb_common = format_money(LOOTBOX_PRICES["common"], lang)
+            lb_rare = format_money(LOOTBOX_PRICES["rare"], lang)
+            lb_epic = format_money(LOOTBOX_PRICES["epic"], lang)
+            lb_legendary = format_money(LOOTBOX_PRICES["legendary"], lang)
             await query.edit_message_text(
                 "🎁 *Lootbox System*\n\n"
                 "Buka lootbox untuk dapat hadiah random!\n\n"
-                "• Common — Rp200 (uang, debt bomb)\n"
-                "• Rare — Rp500 (uang, shield)\n"
-                "• Epic — Rp1200 (uang besar, chaos buff)\n"
-                "• Legendary — Rp3000 (uang gede, title unlock)\n\n"
+                f"• Common — {lb_common} (uang, debt bomb)\n"
+                f"• Rare — {lb_rare} (uang, shield)\n"
+                f"• Epic — {lb_epic} (uang besar, chaos buff)\n"
+                f"• Legendary — {lb_legendary} (uang gede, title unlock)\n\n"
                 "Gunakan:\n/lootbox buy <rarity>\n/lootbox open <rarity>\n"
                 f"{LOOTBOX_DISCLAIMER}",
                 parse_mode="Markdown",
@@ -368,14 +386,15 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif data == "chaos_traps":
             _push_nav(context, "menu_chaos")
+            f = lambda v: format_money(v, lang)
             await query.edit_message_text(
                 "🪤 *Advanced Traps*\n\n"
                 "Gunakan: `/trap <type> @user`\n\n"
-                "• `fake_investment` — 35% | 80-300 dmg | Rp0\n"
-                "• `phishing_trap` — 40% | 60-200 dmg | Rp50\n"
-                "• `tax_trap` — 30% | 100-400 dmg | Rp100\n"
-                "• `pyramid_scheme` — 25% | 150-500 dmg | Rp200\n"
-                "• `mafia_extortion` — 20% | 200-800 dmg | Rp300\n\n"
+                f"• `fake_investment` — 35% | 80-300 dmg | {f(0)}\n"
+                f"• `phishing_trap` — 40% | 60-200 dmg | {f(50)}\n"
+                f"• `tax_trap` — 30% | 100-400 dmg | {f(100)}\n"
+                f"• `pyramid_scheme` — 25% | 150-500 dmg | {f(200)}\n"
+                f"• `mafia_extortion` — 20% | 200-800 dmg | {f(300)}\n\n"
                 "Ketik `/traps` untuk detail lengkap.",
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),

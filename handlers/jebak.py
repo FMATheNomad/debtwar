@@ -5,7 +5,7 @@ from telegram.ext import ContextTypes
 
 from database.user_repo import register_user
 from utils.translator import t
-from utils.helpers import get_username_or_fallback, parse_mention
+from utils.helpers import get_username_or_fallback, parse_mention, resolve_target
 from utils.keyboards import back_to_main_keyboard
 from services.cooldown_service import check_cooldown
 from services.game_logic import execute_jebak
@@ -37,14 +37,25 @@ async def cmd_jebak(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(msg)
         return
 
-    if not context.args:
-        await update.message.reply_text(t("invalid_format_jebak", lang))
-        return
-
-    target_name = parse_mention(context.args[0])
-
-    if target_name.lower() == trapper_uname.lower():
-        await update.message.reply_text(t("self_jebak", lang))
+    reply = update.message.reply_to_message
+    target_name = None
+    if reply and reply.from_user and not reply.from_user.is_bot:
+        tuser = reply.from_user
+        if tuser.id == trapper.id:
+            await update.message.reply_text(t("self_jebak", lang))
+            return
+        target_name = get_username_or_fallback(tuser)
+        await register_user(tuser.id, target_name, lang)
+    elif context.args:
+        target_name = parse_mention(context.args[0])
+        if target_name.lower() == trapper_uname.lower():
+            await update.message.reply_text(t("self_jebak", lang))
+            return
+    else:
+        await update.message.reply_text(
+            "Reply pesan target atau ketik:\n`/jebak @username`",
+            parse_mode="Markdown",
+        )
         return
 
     result = await execute_jebak(trapper.id, trapper.first_name, target_name, lang, context)

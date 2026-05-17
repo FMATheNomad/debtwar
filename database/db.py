@@ -350,6 +350,17 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     window_start INTEGER NOT NULL,
     PRIMARY KEY (user_id, api_key, window_start)
 );
+CREATE TABLE IF NOT EXISTS connections (
+    user_id_a BIGINT NOT NULL,
+    user_id_b BIGINT NOT NULL,
+    connected_at TEXT DEFAULT NOW(),
+    PRIMARY KEY (user_id_a, user_id_b)
+);
+CREATE TABLE IF NOT EXISTS invite_codes (
+    code     TEXT PRIMARY KEY,
+    owner_id BIGINT NOT NULL,
+    created_at TEXT DEFAULT NOW()
+);
 """
         else:
             sql = SQLITE_SCHEMA
@@ -737,5 +748,16 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     count     INTEGER DEFAULT 1,
     window_start INTEGER NOT NULL,
     PRIMARY KEY (user_id, api_key, window_start)
+);
+CREATE TABLE IF NOT EXISTS connections (
+    user_id_a INTEGER NOT NULL,
+    user_id_b INTEGER NOT NULL,
+    connected_at TEXT DEFAULT (datetime('now', 'localtime')),
+    PRIMARY KEY (user_id_a, user_id_b)
+);
+CREATE TABLE IF NOT EXISTS invite_codes (
+    code     TEXT PRIMARY KEY,
+    owner_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
 );
 """

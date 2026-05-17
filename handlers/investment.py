@@ -51,7 +51,7 @@ async def investment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
             pct = ((i["current_price"] - i["previous_price"]) / i["previous_price"]) * 100 if i["previous_price"] else 0
             arrow = "🟢" if pct >= 0 else "🔴"
             text += f"{arrow} *{i['instrument_name']}*\n"
-            text += f"   Harga: Rp{i['current_price']:,.0f} ({pct:+.2f}%)\n"
+            text += f"   Harga: {format_money(int(i['current_price']), lang)} ({pct:+.2f}%)\n"
             text += f"   `/investbuy {i['instrument_type']} {i['instrument_id']} <jumlah>`\n\n"
 
         buttons = [[InlineKeyboardButton("🔙 Kembali", callback_data="invest_show")]]
@@ -72,11 +72,11 @@ async def investment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
                 pct = ((p["current_price"] - (p["total_invested"] / p["shares"] if p["shares"] else 0)) / (p["total_invested"] / p["shares"] if p["shares"] else 1)) * 100
                 arrow = "🟢" if value >= p["total_invested"] else "🔴"
                 text += f"{arrow} *{p['instrument_name']}*\n"
-                text += f"   Nilai: Rp{value:,} | Modal: Rp{p['total_invested']:,}\n"
+                text += f"   Nilai: {format_money(value, lang)} | Modal: {format_money(p['total_invested'], lang)}\n"
                 text += f"   `/investsell {p['instrument_type']} {p['instrument_id']}`\n\n"
 
             total_pnl = total_value - total_cost
-            text += f"━━━━━━━━━━━\nTotal: Rp{total_value:,} ({'+' if total_pnl >= 0 else ''}Rp{total_pnl:,})"
+            text += f"━━━━━━━━━━━\nTotal: {format_money(total_value, lang)} ({'+' if total_pnl >= 0 else ''}{format_money(total_pnl, lang)})"
 
         buttons = [[InlineKeyboardButton("🔙 Kembali", callback_data="invest_show")]]
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))

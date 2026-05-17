@@ -35,6 +35,7 @@ async def faq_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         "faq_commands": "faq_commands",
         "faq_economy": "faq_economy",
         "faq_tips": "faq_tips",
+        "faq_tagging": "faq_tagging",
     }
 
     key = sections.get(data, "faq_title")
