@@ -491,18 +491,23 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         elif data == "npc_show":
             _push_nav(context, "social_menu")
-            npcs = [
-                ("loan_shark", "🧛 Boris si Rentenir", "Pinjaman kilat, bunga tinggi"),
-                ("mafia_boss", "🕴️ Don Corleone", "Misi-misi gelap"),
-                ("scammer", "🐍 Jimmy Tipu", "Ahli phishing"),
-                ("collector", "💪 Rambo Collector", "Bantu nagih utang orang"),
+            lines = [
+                "🤖 *NPC Interaktif*\n",
+                "🧛 *loan_shark* — Boris si Rentenir",
+                "   Pinjaman kilat, bunga tinggi",
+                "   • `borrow` — Pinjem duit (otomatis +bunga)",
+                "   • `pay` — Bayar utang ke Boris\n",
+                "🕴️ *mafia_boss* — Don Corleone",
+                "   Misi-misi gelap",
+                "   • `mission` — Ambil misi random + reward\n",
+                "🐍 *scammer* — Jimmy Tipu",
+                "   Ahli phishing",
+                "   • `phish` — Coba tipu balik (60% berhasil)\n",
+                "💪 *collector* — Rambo Collector",
+                "   Bantu nagih utang orang (fee 30%)",
+                "   • `help_collect` — Tagih random debtor\n",
+                "Contoh: `/npc loan_shark borrow`",
             ]
-            lines = ["🤖 *NPC Interaktif*\n"]
-            for nid, name, desc in npcs:
-                lines.append(f"• `{nid}` — {name}")
-                lines.append(f"  {desc}")
-                lines.append(f"  Gunakan: `/npc {nid}`\n")
-            lines.append("Contoh: `/npc loan_shark borrow` — pinjem duit")
             await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
 
         elif data.startswith("npc_"):

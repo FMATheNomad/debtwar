@@ -19,9 +19,15 @@ async def cmd_npc(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
         text = "🤖 *NPC Hub*\n\n"
+        actions = {
+            "loan_shark": "`borrow` pinjem duit, `pay` bayar utang",
+            "mafia_boss": "`mission` ambil misi",
+            "scammer": "`phish` tipu balik",
+            "collector": "`help_collect` tagih random debtor",
+        }
         for nid, ndata in NPCS.items():
-            text += f"• *{ndata['name']}* — `{nid}`\n  {ndata['desc']}\n\n"
-        text += "Gunakan: /npc <id> <action>\nContoh: /npc loan_shark borrow"
+            text += f"• *{ndata['name']}* — `{nid}`\n  {ndata['desc']}\n  Aksi: {actions.get(nid, '')}\n\n"
+        text += "Gunakan: /npc <id> <action>\nContoh: `/npc loan_shark borrow`"
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=npc_menu_keyboard(lang))
         return
 
