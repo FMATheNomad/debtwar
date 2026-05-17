@@ -568,23 +568,51 @@ async def add_connection(uid_a: int, uid_b: int):
         await conn.close()
 
 
-async def get_connections(user_id: int, query: str = "") -> list:
+async def add_contact(owner_id: int, target_id: int):
+    if owner_id == target_id:
+        return
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "INSERT OR IGNORE INTO contacts (user_id, contact_id, status) VALUES (?, ?, 'pending')",
+            (owner_id, target_id),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def accept_contact(owner_id: int, target_id: int):
+    conn = await get_connection()
+    try:
+        await conn.execute(
+            "UPDATE contacts SET status = 'active' WHERE user_id = ? AND contact_id = ?",
+            (owner_id, target_id),
+        )
+        await conn.execute(
+            "INSERT OR IGNORE INTO contacts (user_id, contact_id, status) VALUES (?, ?, 'active')",
+            (target_id, owner_id),
+        )
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
+async def get_contacts(user_id: int, query: str = "") -> list:
     conn = await get_connection()
     try:
         sql = (
-            "SELECT DISTINCT "
-            "CASE WHEN c.user_id_a = ? THEN c.user_id_b ELSE c.user_id_a END AS other_id, "
-            "c.connected_at, u.username, u.display_name, u.balance, u.debt "
-            "FROM connections c "
-            "JOIN users u ON u.id = CASE WHEN c.user_id_a = ? THEN c.user_id_b ELSE c.user_id_a END "
-            "WHERE (c.user_id_a = ? OR c.user_id_b = ?)"
+            "SELECT c.contact_id, c.status, c.created_at, "
+            "u.username, u.display_name, u.balance, u.debt "
+            "FROM contacts c JOIN users u ON u.id = c.contact_id "
+            "WHERE c.user_id = ?"
         )
-        params = [user_id, user_id, user_id, user_id]
+        params = [user_id]
         if query:
             sql += " AND (u.username LIKE ? OR u.display_name LIKE ? OR CAST(u.id AS TEXT) LIKE ?)"
             like = f"%{query}%"
             params.extend([like, like, like])
-        sql += " ORDER BY c.connected_at DESC LIMIT 20"
+        sql += " ORDER BY c.status ASC, c.created_at DESC LIMIT 30"
         async with conn.execute(sql, params) as cur:
             rows = await cur.fetchall()
         return [dict(r) for r in rows]

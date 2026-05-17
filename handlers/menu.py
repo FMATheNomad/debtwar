@@ -248,16 +248,19 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         elif data == "social_contacts":
-            from database.user_repo import get_connections
+            from database.user_repo import get_contacts
             await query.answer()
-            conns = await get_connections(user.id)
-            if not conns:
-                text = "📇 *Contacts*\n\nKamu belum punya koneksi.\nGunakan `/invite` buat ngajak temen!"
+            cts = await get_contacts(user.id)
+            if not cts:
+                text = "📇 *Contacts*\n\nKamu belum punya kontak.\nMain sama orang dulu, atau gunakan `/invite`."
             else:
                 lines = ["📇 *Contacts*\n"]
-                for c in conns:
-                    name = c.get("display_name") or c.get("username") or f"User#{c['other_id']}"
-                    lines.append(f"• `{c['other_id']}` — {name}")
+                for c in cts:
+                    name = c.get("display_name") or c.get("username") or f"User#{c['contact_id']}"
+                    if c["status"] == "pending":
+                        lines.append(f"• `{c['contact_id']}` — {name} ⏳ (undang dulu)")
+                    else:
+                        lines.append(f"• `{c['contact_id']}` — {name} ✅")
                 text = "\n".join(lines)
             await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
             return

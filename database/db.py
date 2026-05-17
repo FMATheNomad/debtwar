@@ -395,6 +395,10 @@ MIGRATIONS = [
         "sqlite": "ALTER TABLE bank_accounts ADD COLUMN total_interest INTEGER DEFAULT 0",
         "postgres": "ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS total_interest INTEGER DEFAULT 0",
     },
+    {
+        "sqlite": "CREATE TABLE IF NOT EXISTS contacts (user_id INTEGER NOT NULL, contact_id INTEGER NOT NULL, status TEXT DEFAULT 'pending', created_at TEXT DEFAULT (datetime('now', 'localtime')), PRIMARY KEY (user_id, contact_id))",
+        "postgres": "CREATE TABLE IF NOT EXISTS contacts (user_id BIGINT NOT NULL, contact_id BIGINT NOT NULL, status TEXT DEFAULT 'pending', created_at TEXT DEFAULT NOW(), PRIMARY KEY (user_id, contact_id))",
+    },
 ]
 
 

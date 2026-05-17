@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from database.user_repo import get_invite_owner, add_connection
+    from database.user_repo import get_invite_owner, accept_contact
 
     user = update.effective_user
     uname = get_username_or_fallback(user)
@@ -25,7 +25,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if param.startswith("inv_"):
             inv = await get_invite_owner(param)
             if inv and inv["owner_id"] != user.id:
-                await add_connection(inv["owner_id"], user.id)
+                await accept_contact(inv["owner_id"], user.id)
 
     result = await register_user(user.id, uname, lang)
     balance = result["balance"]

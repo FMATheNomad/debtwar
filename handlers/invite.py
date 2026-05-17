@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from config import TOKEN
-from database.user_repo import create_invite_code, get_invite_owner, add_connection, get_connections, get_user_by_id
+from database.user_repo import create_invite_code, get_invite_owner, add_connection, get_contacts, get_user_by_id
 from utils.translator import t
 from utils.helpers import get_username_or_fallback
 from utils.keyboards import back_to_main_keyboard
@@ -33,24 +33,27 @@ async def cmd_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
 
     query = " ".join(context.args) if context.args else ""
-    conns = await get_connections(user.id, query)
+    contacts = await get_contacts(user.id, query)
 
-    if not conns and not query:
+    if not contacts and not query:
         text = (
             f"📇 *Contacts*\n\n"
-            f"Kamu belum punya koneksi.\n"
-            f"Gunakan `/invite` buat ngajak temen!"
+            f"Kamu belum punya kontak.\n"
+            f"Main sama orang dulu, atau gunakan `/invite` buat ngajak temen!"
         )
-    elif not conns and query:
+    elif not contacts and query:
         text = (
             f"📇 *Contacts*\n\n"
             f"Gak ada kontak cocok dengan \"{query}\"."
         )
     else:
         lines = [f"📇 *Contacts* {'— ' + query if query else ''}\n"]
-        for c in conns:
-            name = c.get("display_name") or c.get("username") or f"User#{c['other_id']}"
-            lines.append(f"• `{c['other_id']}` — {name}")
+        for c in contacts:
+            name = c.get("display_name") or c.get("username") or f"User#{c['contact_id']}"
+            if c["status"] == "pending":
+                lines.append(f"• `{c['contact_id']}` — {name} ⏳ (undang dulu!)")
+            else:
+                lines.append(f"• `{c['contact_id']}` — {name} ✅")
         text = "\n".join(lines)
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

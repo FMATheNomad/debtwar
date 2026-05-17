@@ -12,7 +12,7 @@ from database.user_repo import (
     get_user, get_user_full, get_or_create_by_username,
     update_balance, update_debt, update_debt_by_username,
     check_daily_limit, add_daily_limit, add_transaction,
-    add_ghost_notification, add_connection,
+    add_ghost_notification, add_contact,
 )
 
 from services.notification import send_notification
@@ -73,7 +73,7 @@ async def execute_utang(lender_id: int, lender_name: str, target_name: str, amou
         msg += f"\n\n{notif_result}"
 
     try:
-        await add_connection(lender_id, target["id"])
+        await add_contact(lender_id, target["id"])
     except Exception:
         pass
 
@@ -234,7 +234,7 @@ async def execute_transfer(sender_id: int, sender_name: str, target_name: str, a
     )
 
     try:
-        await add_connection(sender_id, target["id"])
+        await add_contact(sender_id, target["id"])
     except Exception:
         pass
 
