@@ -32,20 +32,25 @@ async def cmd_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uname = get_username_or_fallback(user)
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
 
-    conns = await get_connections(user.id)
-    if not conns:
+    query = " ".join(context.args) if context.args else ""
+    conns = await get_connections(user.id, query)
+
+    if not conns and not query:
         text = (
             f"📇 *Contacts*\n\n"
             f"Kamu belum punya koneksi.\n"
-            f"Gunakan /invite buat ngajak temen!"
+            f"Gunakan `/invite` buat ngajak temen!"
+        )
+    elif not conns and query:
+        text = (
+            f"📇 *Contacts*\n\n"
+            f"Gak ada kontak cocok dengan \"{query}\"."
         )
     else:
-        lines = ["📇 *Contacts*\n"]
-        for c in conns[:20]:
-            other = await get_user_by_id(c["other_id"])
-            if other:
-                name = other.get("display_name") or other.get("username") or f"User#{other['id']}"
-                lines.append(f"• `{other['id']}` — {name}")
+        lines = [f"📇 *Contacts* {'— ' + query if query else ''}\n"]
+        for c in conns:
+            name = c.get("display_name") or c.get("username") or f"User#{c['other_id']}"
+            lines.append(f"• `{c['other_id']}` — {name}")
         text = "\n".join(lines)
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
