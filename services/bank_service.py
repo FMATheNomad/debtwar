@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from database.db import get_connection
-from database.user_repo import get_user_full, update_balance
+from database.user_repo import get_user_full, update_balance, add_transaction
 from config import BANK_INTEREST_RATE, BANK_WITHDRAW_FEE, BANK_MAX_BALANCE
 from utils.formatter import format_money
 from utils.translator import t
@@ -22,7 +22,7 @@ async def get_bank_account(user_id: int) -> dict:
                 "INSERT INTO bank_accounts (user_id) VALUES (?)", (user_id,)
             )
             await conn.commit()
-            return {"user_id": user_id, "balance": 0, "last_interest": None, "total_deposited": 0, "total_withdrawn": 0}
+            return {"user_id": user_id, "balance": 0, "last_interest": None, "total_deposited": 0, "total_withdrawn": 0, "total_interest": 0}
     finally:
         await conn.close()
 
@@ -46,6 +46,8 @@ async def bank_deposit(user_id: int, amount: int, lang: str) -> dict:
         await conn.commit()
     finally:
         await conn.close()
+
+    await add_transaction(user_id, "bank", "deposit", amount)
 
     return {"ok": True, "text": t("bank_deposited", lang, amount=format_money(amount, lang), balance=format_money(account["balance"] + amount, lang))}
 
@@ -71,6 +73,8 @@ async def bank_withdraw(user_id: int, amount: int, lang: str) -> dict:
     finally:
         await conn.close()
 
+    await add_transaction(user_id, "bank", "withdraw", net)
+
     return {"ok": True, "text": t("bank_withdrawn", lang, amount=format_money(amount, lang), net=format_money(net, lang), fee=format_money(fee, lang))}
 
 
@@ -78,6 +82,7 @@ async def get_bank_info(user_id: int, lang: str) -> str:
     account = await get_bank_account(user_id)
     user = await get_user_full(user_id)
     balance = user["balance"] if user else 0
+    total_interest = account.get("total_interest", 0)
 
     return (
         f"🏦 *Bank Sentral Debt War*\n\n"
@@ -85,11 +90,42 @@ async def get_bank_info(user_id: int, lang: str) -> str:
         f"👛 Saldo Dompet: *{format_money(balance, lang)}*\n"
         f"📈 Total Deposit: {format_money(account['total_deposited'], lang)}\n"
         f"📉 Total Withdraw: {format_money(account['total_withdrawn'], lang)}\n"
+        f"📊 Keuntungan Bunga: *{format_money(total_interest, lang)}*\n"
         f"💸 Bunga: {BANK_INTEREST_RATE*100}% per hari\n"
         f"🏧 Fee Withdraw: {BANK_WITHDRAW_FEE*100}%\n"
         f"📦 Max Rekening: {format_money(BANK_MAX_BALANCE, lang)}\n\n"
         f"Gunakan:\n/bank deposit <jumlah>\n/bank withdraw <jumlah>"
     )
+
+
+async def get_bank_transactions(user_id: int, lang: str) -> str:
+    conn = await get_connection()
+    try:
+        async with conn.execute(
+            "SELECT type, amount, timestamp FROM transactions WHERE from_id = ? AND to_user = 'bank' ORDER BY timestamp DESC LIMIT 20",
+            (user_id,),
+        ) as cur:
+            rows = await cur.fetchall()
+    finally:
+        await conn.close()
+
+    account = await get_bank_account(user_id)
+    total_interest = account.get("total_interest", 0)
+
+    if not rows:
+        return (
+            f"🏦 *Riwayat Bank*\n\n"
+            f"Belum ada transaksi.\n"
+            f"📊 Total Keuntungan Bunga: {format_money(total_interest, lang)}"
+        )
+
+    lines = [f"🏦 *Riwayat Bank*\n"]
+    for r in rows:
+        icon = "📥" if r["type"] == "deposit" else "📤" if r["type"] == "withdraw" else "💸"
+        lines.append(f"{icon} {r['type'].upper()} — {format_money(r['amount'], lang)}")
+    lines.append(f"\n📊 Total Keuntungan Bunga: *{format_money(total_interest, lang)}*")
+
+    return "\n".join(lines)
 
 
 async def process_bank_interest():
@@ -104,10 +140,13 @@ async def process_bank_interest():
             interest = int(acc["balance"] * BANK_INTEREST_RATE / 12)
             if interest > 0:
                 await conn.execute(
-                    "UPDATE bank_accounts SET balance = balance + ?, last_interest = datetime('now', 'localtime') WHERE user_id = ?",
-                    (interest, acc["user_id"]),
+                    "UPDATE bank_accounts SET balance = balance + ?, total_interest = COALESCE(total_interest, 0) + ?, last_interest = datetime('now', 'localtime') WHERE user_id = ?",
+                    (interest, interest, acc["user_id"]),
                 )
         await conn.commit()
         return len(accounts)
     finally:
         await conn.close()
+
+
+

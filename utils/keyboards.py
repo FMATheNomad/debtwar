@@ -197,6 +197,7 @@ def bank_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("📤 Withdraw", callback_data="bank_withdraw"),
+            InlineKeyboardButton("📜 Riwayat", callback_data="bank_history"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),

@@ -391,6 +391,10 @@ MIGRATIONS = [
         "sqlite": "ALTER TABLE users ADD COLUMN last_interest_calc TEXT",
         "postgres": "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_interest_calc TEXT",
     },
+    {
+        "sqlite": "ALTER TABLE bank_accounts ADD COLUMN total_interest INTEGER DEFAULT 0",
+        "postgres": "ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS total_interest INTEGER DEFAULT 0",
+    },
 ]
 
 

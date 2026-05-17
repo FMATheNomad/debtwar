@@ -450,6 +450,12 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=back_to_main_keyboard(lang),
             )
 
+        elif data == "bank_history":
+            _push_nav(context, "bank_info")
+            from services.bank_service import get_bank_transactions
+            text = await get_bank_transactions(user.id, lang)
+            await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
+
         elif data == "casino_slots":
             _push_nav(context, "chaos_casino")
             await query.edit_message_text("🎰 Gunakan: /slots <bet>", reply_markup=back_to_main_keyboard(lang))
