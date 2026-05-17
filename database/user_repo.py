@@ -244,25 +244,20 @@ async def set_user_field(user_id: int, field: str, value):
 async def get_leaderboard(category: str, limit: int = 10):
     conn = await get_connection()
     try:
+        base_filter = "id > 0 AND username NOT LIKE '%\\_%' AND username NOT LIKE 'ghost\\_%' ESCAPE '\\'"
         if category == "richest":
-            query = "SELECT username, MAX(display_name) as display_name, MAX(balance) as balance FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY balance DESC LIMIT ?"
+            query = f"SELECT username, MAX(display_name) as display_name, MAX(balance) as balance FROM users WHERE {base_filter} GROUP BY username ORDER BY balance DESC LIMIT ?"
         elif category == "debt":
-            query = "SELECT username, MAX(display_name) as display_name, MAX(debt) as debt FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY debt DESC LIMIT ?"
+            query = f"SELECT username, MAX(display_name) as display_name, MAX(debt) as debt FROM users WHERE {base_filter} GROUP BY username ORDER BY debt DESC LIMIT ?"
         elif category == "chaos":
-            query = """SELECT username, MAX(display_name) as display_name,
+            query = f"""SELECT username, MAX(display_name) as display_name,
                        MAX(traps_set + total_lent/100 + total_collected/100) as chaos_score
-                       FROM users WHERE id IS NOT NULL AND username IS NOT NULL GROUP BY username ORDER BY chaos_score DESC LIMIT ?"""
+                       FROM users WHERE {base_filter} GROUP BY username ORDER BY chaos_score DESC LIMIT ?"""
         else:
             return []
         async with conn.execute(query, (limit,)) as cur:
             rows = await cur.fetchall()
-            result = []
-            for row in rows:
-                d = dict(row)
-                if d.get("username", "").startswith("ghost_"):
-                    continue
-                result.append(d)
-            return result
+            return [dict(row) for row in rows]
     finally:
         await conn.close()
 
@@ -374,25 +369,39 @@ async def get_achievement_count_by_username(username: str) -> int:
 async def get_leaderboard_chaos_detail(limit: int = 10) -> list:
     conn = await get_connection()
     try:
-        query = """SELECT username,
+        base_filter = "id > 0 AND username NOT LIKE '%\\_%' AND username NOT LIKE 'ghost\\_%' ESCAPE '\\'"
+        query = f"""SELECT username,
                    MAX(balance) as balance, MAX(debt) as debt,
                    MAX(total_lent) as total_lent, MAX(total_collected) as total_collected,
                    MAX(traps_set) as traps_set, MAX(traps_successful) as traps_successful,
                    MAX(traps_set + total_lent/100 + total_collected/100) as chaos_score
-                   FROM users WHERE id IS NOT NULL AND username IS NOT NULL
+                   FROM users WHERE {base_filter}
                    GROUP BY username ORDER BY chaos_score DESC LIMIT ?"""
         async with conn.execute(query, (limit,)) as cur:
             rows = await cur.fetchall()
-            result = []
-            for row in rows:
-                d = dict(row)
-                if d.get("username", "").startswith("ghost_"):
-                    continue
-                d["achievements"] = await get_achievement_count_by_username(d["username"])
-                d["titles"] = await get_title_count_by_username(d["username"])
-                d["active_title"] = await get_active_title_by_username(d["username"])
-                result.append(d)
-            return result
+            rows = [dict(row) for row in rows]
+        conn2 = await get_connection()
+        try:
+            for d in rows:
+                async with conn2.execute(
+                    "SELECT COUNT(*) FROM achievements a JOIN users u ON a.user_id = u.id WHERE u.username = ?",
+                    (d["username"],),
+                ) as cur:
+                    d["achievements"] = (await cur.fetchone())[0] or 0
+                async with conn2.execute(
+                    "SELECT COUNT(*) FROM user_titles ut JOIN users u ON ut.user_id = u.id WHERE u.username = ?",
+                    (d["username"],),
+                ) as cur:
+                    d["titles"] = (await cur.fetchone())[0] or 0
+                async with conn2.execute(
+                    "SELECT t.name FROM user_titles ut JOIN users u ON ut.user_id = u.id JOIN titles t ON ut.title_id = t.id WHERE u.username = ? AND ut.is_active = 1 LIMIT 1",
+                    (d["username"],),
+                ) as cur:
+                    row = await cur.fetchone()
+                    d["active_title"] = row[0] if row else None
+        finally:
+            await conn2.close()
+        return rows
     finally:
         await conn.close()
 

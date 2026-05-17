@@ -1,5 +1,5 @@
 import logging
-import re
+import re as _re
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -12,6 +12,19 @@ from database.user_repo import get_leaderboard, get_leaderboard_chaos_detail
 logger = logging.getLogger(__name__)
 
 
+import re
+
+
+def _lb_name(row: dict) -> str:
+    dn = row.get("display_name") or ""
+    un = row.get("username") or ""
+    if dn:
+        return safe(dn)
+    if un and not _re.search(r"_\d{5,}$", un):
+        return f"@{safe(un)}"
+    return "Player"
+
+
 async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
@@ -22,7 +35,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if rows:
         for i, row in enumerate(rows, 1):
             m = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"{i}.")
-            text += f"{m} {safe(row.get('display_name', row['username']))} (`@{safe(row['username'])}`) — {row['balance']}\n"
+            text += f"{m} {_lb_name(row)} — {row['balance']}\n"
     else:
         text += f"{t('leaderboard_empty', lang)}\n"
 
@@ -31,7 +44,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if rows:
         for i, row in enumerate(rows, 1):
             m = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"{i}.")
-            text += f"{m} {safe(row.get('display_name', row['username']))} (`@{safe(row['username'])}`) — {row['debt']}\n"
+            text += f"{m} {_lb_name(row)} — {row['debt']}\n"
     else:
         text += f"{t('leaderboard_empty', lang)}\n"
 
@@ -40,7 +53,7 @@ async def cmd_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if rows:
         for i, row in enumerate(rows, 1):
             m = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"{i}.")
-            text += f"{m} {safe(row.get('display_name', row['username']))} (`@{safe(row['username'])}`) — {row['chaos_score']}\n"
+            text += f"{m} {_lb_name(row)} — {row['chaos_score']}\n"
     else:
         text += f"{t('leaderboard_empty', lang)}\n"
 
@@ -70,9 +83,7 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 for i, row in enumerate(rows, 1):
                     medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-                    raw_name = row.get("username", "") or ""
-                    display = row.get("display_name") or ""
-                    name = display if display else f"@{raw_name}" if raw_name else "Player"
+                    name = _lb_name(row)
                     score = row.get("chaos_score", 0)
                     t_set = row.get("traps_set", 0)
                     t_ok = row.get("traps_successful", 0)
@@ -102,14 +113,11 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             lines.append(t("leaderboard_empty", lang))
         else:
             for i, row in enumerate(rows, 1):
-                raw_name = row.get("username", "") or ""
-                display = row.get("display_name") or ""
-                name = display if display else f"@{raw_name}" if raw_name else "Player"
                 keys = list(row.keys())
-                val_key = [k for k in keys if k not in ("username", "display_name")][0]
-                val = row.get(val_key, 0)
+                val_keys = [k for k in keys if k not in ("username", "display_name")]
+                val = row.get(val_keys[0], 0) if val_keys else 0
                 medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(i, f"{i}.")
-                lines.append(f"{medal} {name} \u2014 {val}")
+                lines.append(f"{medal} {_lb_name(row)} \u2014 {val}")
 
         await query.edit_message_text("\n".join(lines), parse_mode="Markdown", reply_markup=back_kb)
 
