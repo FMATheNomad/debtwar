@@ -510,7 +510,7 @@ async def get_total_lent_to_target(lender_id: int, target_username: str) -> int:
     conn = await get_connection()
     try:
         async with conn.execute(
-            "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE from_id = ? AND to_user = ? AND type = 'utang'",
+            "SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE from_id = ? AND to_user = ? AND type IN ('utang', 'jebak_success')",
             (lender_id, target_username),
         ) as cur:
             row = await cur.fetchone()
