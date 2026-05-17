@@ -192,11 +192,10 @@ def gang_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def bank_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("🏦 Info", callback_data="bank_info"),
             InlineKeyboardButton("📥 Deposit", callback_data="bank_deposit"),
+            InlineKeyboardButton("📤 Withdraw", callback_data="bank_withdraw"),
         ],
         [
-            InlineKeyboardButton("📤 Withdraw", callback_data="bank_withdraw"),
             InlineKeyboardButton("📜 Riwayat", callback_data="bank_history"),
         ],
         [
