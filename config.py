@@ -37,6 +37,10 @@ COOLDOWNS = {
     "nagih": 5,
     "jebak": 15,
     "transfer": 10,
+    "npc_loan_shark": 600,
+    "npc_mafia_boss": 600,
+    "npc_scammer": 300,
+    "npc_collector": 600,
 }
 
 # ─────────────────────────────────────────
@@ -245,6 +249,8 @@ WORLD_EVENT_CHANCE = 0.3
 NPC_COOLDOWN = 600
 NPC_LOAN_SHARK_MAX = 3000
 NPC_LOAN_SHARK_INTEREST = 0.10
+NPC_MISSION_COST_MIN = 50
+NPC_MISSION_COST_MAX = 200
 NPC_MISSION_REWARD_MIN = 100
 NPC_MISSION_REWARD_MAX = 500
 

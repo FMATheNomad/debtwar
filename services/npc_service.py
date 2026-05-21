@@ -2,7 +2,7 @@ import logging
 import random
 from database.db import get_connection
 from database.user_repo import get_user_full, update_balance, update_debt
-from config import NPC_LOAN_SHARK_MAX, NPC_LOAN_SHARK_INTEREST, NPC_MISSION_REWARD_MIN, NPC_MISSION_REWARD_MAX
+from config import NPC_LOAN_SHARK_MAX, NPC_LOAN_SHARK_INTEREST, NPC_MISSION_COST_MIN, NPC_MISSION_COST_MAX, NPC_MISSION_REWARD_MIN, NPC_MISSION_REWARD_MAX
 from utils.formatter import format_money
 from utils.translator import t
 
@@ -80,9 +80,32 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
 
     elif npc_id == "mafia_boss":
         if action == "mission":
+            cost = random.randint(NPC_MISSION_COST_MIN, NPC_MISSION_COST_MAX)
+            if user["balance"] < cost:
+                return {
+                    "ok": False,
+                    "text": f"🕴️ *{npc['name']}*\n\n"
+                            f"\"Misi butuh modal {format_money(cost, lang)} untuk suap dan peralatan. "
+                            f"Saldomu tidak cukup. Kembali kalau sudah punya duit.\"",
+                }
+
+            await update_balance(user_id, -cost)
+
+            if random.random() < 0.15:
+                await log_interaction(user_id, npc_id, "mission_fail", -cost)
+                await add_transaction(user_id, f"npc_{npc_id}", "mission_fail", cost)
+                return {
+                    "ok": True,
+                    "text": f"🕴️ *{npc['name']}*\n\n"
+                            f"\"Misi gagal! Informasi bocor, target kabur. "
+                            f"Kamu kehilangan modal {format_money(cost, lang)}. "
+                            f"Hilang dari sini sebelum bos marah.\"\n\n"
+                            f"❌ Rugi: -{format_money(cost, lang)}",
+                }
+
             reward = random.randint(NPC_MISSION_REWARD_MIN, NPC_MISSION_REWARD_MAX)
             await update_balance(user_id, reward)
-            await log_interaction(user_id, npc_id, "mission", reward)
+            await log_interaction(user_id, npc_id, "mission", reward - cost)
             await add_transaction(user_id, f"npc_{npc_id}", "mission", reward)
             missions = [
                 "Bakar warung saingan",
@@ -92,11 +115,14 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 "Lindungi bos dari raid",
             ]
             mission = random.choice(missions)
+            net = reward - cost
             return {
                 "ok": True,
                 "text": f"🕴️ *{npc['name']}*\n\n"
                         f"\"Ada misi untukmu: *{mission}*. Lakukan diam-diam.\"\n\n"
-                        f"💰 Reward: +{format_money(reward, lang)}",
+                        f"💸 Modal: -{format_money(cost, lang)}\n"
+                        f"💰 Reward: +{format_money(reward, lang)}\n"
+                        f"📊 Total: {'+' if net >= 0 else ''}{format_money(net, lang)}",
             }
 
     elif npc_id == "scammer":

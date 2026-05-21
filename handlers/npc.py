@@ -7,6 +7,7 @@ from utils.keyboards import npc_menu_keyboard, back_to_main_keyboard
 from database.user_repo import register_user
 from services.cooldown_service import check_cooldown
 from services.npc_service import get_npc_info, interact_npc, NPCS
+from anti_abuse.abuse_service import check_rate_limit, check_bankruptcy_block
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,15 @@ async def cmd_npc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remaining = await check_cooldown(user.id, f"npc_{npc_id}")
     if remaining > 0:
         await update.message.reply_text(f"⏳ Cooldown {remaining}s")
+        return
+
+    if not check_rate_limit(user.id):
+        await update.message.reply_text(t("anti_abuse_too_fast", lang))
+        return
+
+    blocked, msg = await check_bankruptcy_block(user.id, lang)
+    if blocked:
+        await update.message.reply_text(msg)
         return
 
     if len(context.args) < 2:
