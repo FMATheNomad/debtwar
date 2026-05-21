@@ -35,7 +35,7 @@ async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         buttons.append([InlineKeyboardButton(f"{name} — {price}", callback_data=f"shop_{pid}")])
 
     buttons.append([InlineKeyboardButton("💎 Pakai Gems", callback_data="shop_gems_use")])
-    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
+    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")])
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -79,10 +79,10 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         buttons = [
             [InlineKeyboardButton("💳 Bayar via Doku", url=f"https://journal.doku.com/checkout?invoice={invoice_id}")],
             [InlineKeyboardButton("✅ Saya sudah bayar", callback_data="pay_confirm")],
-            [InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")],
+            [InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")],
         ]
     else:
         text += t("shop_payment_unavailable", lang)
-        buttons = [[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")]]
+        buttons = [[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")]]
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))

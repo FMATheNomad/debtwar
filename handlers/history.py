@@ -64,6 +64,6 @@ async def history_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     buttons = []
     if has_more:
         buttons.append([InlineKeyboardButton(t("history_more_btn", lang), callback_data=f"history_more_{offset + limit}")])
-    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
+    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")])
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))

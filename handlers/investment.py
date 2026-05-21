@@ -32,7 +32,7 @@ async def investment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
             ("Portfolio Saya", "invest_portfolio"),
         ]
         buttons = [[InlineKeyboardButton(n, callback_data=c)] for n, c in types]
-        buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
+        buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")])
         await query.edit_message_text(
             t("invest_menu_desc", lang),
             parse_mode="Markdown",

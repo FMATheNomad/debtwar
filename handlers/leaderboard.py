@@ -67,7 +67,7 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     await query.answer()
 
-    back_kb = InlineKeyboardMarkup([[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="leaderboard_show")]])
+    back_kb = InlineKeyboardMarkup([[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")]])
 
     try:
         valid = {"lb_richest", "lb_debt", "lb_chaos", "lb_chaos_detail"}

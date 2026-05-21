@@ -11,6 +11,7 @@ from services.gang_service import (
     handle_gang_war_declare,
 )
 from database.user_repo import register_user
+from handlers.menu import _push_nav
 
 logger = logging.getLogger(__name__)
 
@@ -82,21 +83,30 @@ async def gang_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     await query.answer()
 
+    def push_gang_sub():
+        _push_nav(context, "gang_menu")
+
     if data == "gang_info":
+        push_gang_sub()
         result = await handle_gang_info(user.id, lang)
     elif data == "gang_leaderboard":
+        push_gang_sub()
         text = await handle_gang_leaderboard(lang)
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
         return
     elif data == "gang_create":
+        push_gang_sub()
         await query.edit_message_text(t("gang_prompt_create", lang), parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
         return
     elif data == "gang_join":
+        push_gang_sub()
         await query.edit_message_text(t("gang_prompt_join", lang), parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
         return
     elif data == "gang_leave":
+        push_gang_sub()
         result = await handle_leave_gang(user.id, lang)
     elif data == "gang_vault":
+        push_gang_sub()
         result = await handle_gang_info(user.id, lang)
         if result["ok"]:
             result["text"] += t("gang_vault_hint", lang)

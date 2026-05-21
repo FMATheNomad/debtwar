@@ -44,7 +44,7 @@ async def titles_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     row = []
         if row:
             buttons.append(row)
-        buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
+        buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back")])
 
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))
 

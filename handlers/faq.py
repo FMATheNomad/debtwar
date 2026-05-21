@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 
 from utils.translator import t
 from utils.keyboards import faq_menu_keyboard, back_to_main_keyboard
+from handlers.menu import _push_nav
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ async def faq_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             + t("faq_tips", lang)
         )
     else:
+        _push_nav(context, "faq_show")
         text = t(key, lang)
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=faq_menu_keyboard(lang))

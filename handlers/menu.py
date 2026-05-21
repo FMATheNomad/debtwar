@@ -30,7 +30,9 @@ _BTN_DESCS = {
     "action_transfer": "btn_desc_transfer",
     "faq_show": "btn_desc_faq",
     "credit_show": "btn_desc_credit",
+    "profile_credit": "btn_desc_credit",
     "stats_show": "btn_desc_stats",
+    "profile_stats": "btn_desc_stats",
     "titles_show": "btn_desc_titles",
     "social_menu": "btn_desc_social",
     "gang_menu": "btn_desc_gang",
@@ -180,18 +182,28 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from handlers.credit import credit_callback
             await credit_callback(update, context)
 
+        elif data == "profile_credit":
+            _push_nav(context, "profile_show")
+            from handlers.credit import credit_callback
+            await credit_callback(update, context)
+
         elif data == "stats_show":
             _push_nav(context, "menu_main")
             from handlers.stats import stats_callback
             await stats_callback(update, context)
 
+        elif data == "profile_stats":
+            _push_nav(context, "profile_show")
+            from handlers.stats import stats_callback
+            await stats_callback(update, context)
+
         elif data in ("titles_show",) or data.startswith("title_select_"):
-            _push_nav(context, "menu_main")
+            _push_nav(context, "profile_show")
             from handlers.titles import titles_callback
             await titles_callback(update, context)
 
         elif data == "achievements_show":
-            _push_nav(context, "menu_main")
+            _push_nav(context, "profile_show")
             from database.user_repo import get_user_achievements
             from config import ACHIEVEMENTS
             ach_list = await get_user_achievements(user.id)
@@ -232,6 +244,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         elif data == "social_invite":
+            _push_nav(context, "social_menu")
             from database.user_repo import create_invite_code
             await query.answer()
             code = await create_invite_code(user.id)
@@ -245,6 +258,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         elif data == "social_contacts":
+            _push_nav(context, "social_menu")
             from database.user_repo import get_contacts
             await query.answer()
             cts = await get_contacts(user.id)

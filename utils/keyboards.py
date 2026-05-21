@@ -64,7 +64,7 @@ def chaos_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("chaos_btn_lunas", lang), callback_data="chaos_lunas"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -81,7 +81,7 @@ def leaderboard_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("leaderboard_chaos_detail", lang), callback_data="lb_chaos_detail"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -102,7 +102,7 @@ def profile_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(t("menu_btn_refresh", lang), callback_data="profile_show"),
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -122,7 +122,7 @@ def faq_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("faq_btn_tagging", lang), callback_data="faq_tagging"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -183,7 +183,7 @@ def gang_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("gang_btn_vault", lang), callback_data="gang_vault"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -199,7 +199,7 @@ def bank_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("bank_btn_history", lang), callback_data="bank_history"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -215,7 +215,7 @@ def casino_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("casino_btn_roulette", lang), callback_data="casino_roulette"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -228,7 +228,7 @@ def market_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("market_btn_inventory", lang), callback_data="inventory_show"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -253,7 +253,7 @@ def lootbox_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("lootbox_btn_open_legendary", lang), callback_data="lb_open_leg"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -273,7 +273,7 @@ def trap_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("trap_btn_mafia_extortion", lang), callback_data="trap_mafia_extortion"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -290,7 +290,7 @@ def npc_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("npc_btn_collector", lang), callback_data="npc_collector"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -303,7 +303,7 @@ def court_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("court_btn_vote", lang), callback_data="court_vote"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -320,7 +320,7 @@ def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("social_btn_npc", lang), callback_data="npc_show"),
         ],
         [
-            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
+            InlineKeyboardButton(t("menu_btn_back", lang), callback_data="_back"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
