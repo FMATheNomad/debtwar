@@ -8,11 +8,13 @@ from utils.translator import t
 
 logger = logging.getLogger(__name__)
 
-INSTRUMENT_LABELS = {
-    "stock": "Saham",
-    "mutual_fund": "Reksadana",
-    "bond": "Obligasi",
-}
+def get_instrument_label(itype: str, lang: str) -> str:
+    labels = {
+        "stock": "invest_label_stock",
+        "mutual_fund": "invest_label_mf",
+        "bond": "invest_label_bond",
+    }
+    return t(labels.get(itype, ""), lang)
 
 
 async def get_all_prices():
@@ -67,7 +69,7 @@ async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: 
     user = await get_user_full(user_id)
     if not user or user["balance"] < amount:
         bal = format_money(user["balance"] if user else 0, lang)
-        return {"ok": False, "text": f"Saldo gak cukup. Kamu cuma punya {bal}."}
+        return {"ok": False, "text": t("invest_insufficient", lang, balance=bal)}
 
     conn = await get_connection()
     try:
@@ -78,7 +80,7 @@ async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: 
             instr = await cur.fetchone()
 
         if not instr:
-            return {"ok": False, "text": "Instrumen gak ditemukan."}
+            return {"ok": False, "text": t("invest_not_found", lang)}
 
         price = instr["current_price"]
         shares = amount / price
@@ -97,7 +99,7 @@ async def buy_instrument(user_id: int, itype: str, iid: str, amount: int, lang: 
 
         return {
             "ok": True,
-            "text": f"✅ Dibeli {shares:.2f} unit {instr['instrument_name']} seharga {format_money(amount, lang)}.",
+            "text": t("invest_bought", lang, shares=f"{shares:.2f}", name=instr['instrument_name'], price=format_money(amount, lang)),
         }
     finally:
         await conn.close()
@@ -116,7 +118,7 @@ async def sell_instrument(user_id: int, itype: str, iid: str, lang: str) -> dict
             holding = await cur.fetchone()
 
         if not holding or not holding["total_shares"] or holding["total_shares"] <= 0:
-            return {"ok": False, "text": "Kamu gak punya instrumen ini."}
+            return {"ok": False, "text": t("invest_no_holding", lang)}
 
         async with conn.execute(
             "SELECT * FROM investment_prices WHERE instrument_type = ? AND instrument_id = ?",
@@ -124,7 +126,7 @@ async def sell_instrument(user_id: int, itype: str, iid: str, lang: str) -> dict
         ) as cur:
             instr = await cur.fetchone()
             if not instr:
-                return {"ok": False, "text": "Instrumen gak ditemukan."}
+                return {"ok": False, "text": t("invest_not_found", lang)}
 
         current_price = instr["current_price"]
         total_value = int(holding["total_shares"] * current_price)
@@ -145,8 +147,7 @@ async def sell_instrument(user_id: int, itype: str, iid: str, lang: str) -> dict
         pnl = f"+{format_money(profit, lang)}" if profit >= 0 else format_money(profit, lang)
         return {
             "ok": True,
-            "text": f"✅ Dijual {holding['total_shares']:.2f} unit {instr['instrument_name']}.\n"
-            f"Diterima: {format_money(total_value, lang)} ({pnl})",
+            "text": t("invest_sold", lang, shares=f"{holding['total_shares']:.2f}", name=instr['instrument_name'], total=format_money(total_value, lang), pnl=pnl),
         }
     finally:
         await conn.close()

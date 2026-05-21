@@ -45,13 +45,7 @@ async def cmd_sabotage(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     else:
         await update.message.reply_text(
-            f"💣 *Sabotage System*\n\n"
-            f"Reply pesan target atau ketik:\n/sabotage <type> @username\n\n"
-            f"Tipe:\n"
-            f"• `freeze` — Freeze balance target (1 jam)\n"
-            f"• `steal` — Curi uang target\n"
-            f"• `block_daily` — Block daily reward target\n\n"
-            f"Biaya: {format_money(SABOTAGE_COST, lang)}",
+            t("sabotage_help", lang, cost=format_money(SABOTAGE_COST, lang)),
             parse_mode="Markdown",
             reply_markup=back_to_main_keyboard(lang),
         )

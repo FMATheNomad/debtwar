@@ -53,7 +53,7 @@ async def cmd_jebak(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     else:
         await update.message.reply_text(
-            "Reply pesan target atau ketik:\n`/jebak @username`",
+            t("jebak_format_help", lang),
             parse_mode="Markdown",
         )
         return

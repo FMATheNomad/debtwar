@@ -53,7 +53,7 @@ async def cmd_nagih(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     else:
         await update.message.reply_text(
-            "Reply pesan target atau ketik:\n`/nagih @username`",
+            t("nagih_format_help", lang),
             parse_mode="Markdown",
         )
         return

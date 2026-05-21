@@ -22,14 +22,9 @@ async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     gems = await get_gems(user.id)
     has_sp = await has_active_season_pass(user.id)
-    sp_status = "✅ Aktif" if has_sp else "❌ Belum"
+    sp_status = t("shop_sp_active", lang) if has_sp else t("shop_sp_inactive", lang)
 
-    text = (
-        f"🏪 *Debt War Shop*\n\n"
-        f"💎 Gems kamu: *{gems}*\n"
-        f"🎟️ Season Pass: {sp_status}\n\n"
-        f"Pilih produk:\n"
-    )
+    text = t("shop_header", lang, gems=gems, sp_status=sp_status)
 
     buttons = []
     for pid, p in PRODUCTS.items():
@@ -40,7 +35,7 @@ async def cmd_shop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         buttons.append([InlineKeyboardButton(f"{name} — {price}", callback_data=f"shop_{pid}")])
 
     buttons.append([InlineKeyboardButton("💎 Pakai Gems", callback_data="shop_gems_use")])
-    buttons.append([InlineKeyboardButton("🔙 Kembali", callback_data="menu_main")])
+    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -54,16 +49,7 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "shop_gems_use":
         gems = await get_gems(user.id)
-        text = (
-            f"💎 *Pakai Gems*\n\n"
-            f"Kamu punya *{gems} Gems*.\n\n"
-            f"Gems bisa dipake buat:\n"
-            f"• Legendary Lootbox — 100 Gems\n"
-            f"• Instant Cooldown — 20 Gems\n"
-            f"• Ganti Title — 50 Gems\n"
-            f"• Season XP Boost (24h) — 40 Gems\n\n"
-            f"Fitur ini akan datang segera!"
-        )
+        text = t("shop_gems_info", lang, gems=gems)
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
         return
 
@@ -79,11 +65,7 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "user_id": user.id,
     }
 
-    text = (
-        f"🧾 *Invoice #{invoice_id}*\n\n"
-        f"{product['title']}\n"
-        f"Total: *{product.get('label', f'${amount/100:.2f}')}*\n\n"
-    )
+    text = t("shop_invoice", lang, id=invoice_id, product=product['title'], total=product.get('label', f'${amount/100:.2f}')) + "\n\n"
 
     if DOKU_MERCHANT and DOKU_SECRET:
         text += (
@@ -97,14 +79,10 @@ async def shop_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         buttons = [
             [InlineKeyboardButton("💳 Bayar via Doku", url=f"https://journal.doku.com/checkout?invoice={invoice_id}")],
             [InlineKeyboardButton("✅ Saya sudah bayar", callback_data="pay_confirm")],
-            [InlineKeyboardButton("🔙 Batal", callback_data="menu_main")],
+            [InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")],
         ]
     else:
-        text += (
-            "⚠️ *Pembayaran otomatis belum aktif.*\n\n"
-            "Owner bot sedang mengatur metode pembayaran.\n"
-            "Sementara ini bisa hubungi owner langsung."
-        )
-        buttons = [[InlineKeyboardButton("🔙 Kembali", callback_data="menu_main")]]
+        text += t("shop_payment_unavailable", lang)
+        buttons = [[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")]]
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))

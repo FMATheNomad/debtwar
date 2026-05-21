@@ -70,7 +70,7 @@ async def cmd_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     else:
         await update.message.reply_text(
-            "Reply pesan target + jumlah, atau ketik:\n`/transfer @username <jumlah>`",
+            t("transfer_format_help", lang),
             parse_mode="Markdown",
         )
         return
@@ -108,9 +108,7 @@ async def cmd_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "amount_formatted": money_fmt,
         }
         await update.message.reply_text(
-            f"⚠️ *Konfirmasi Transfer*\n\n"
-            f"Transfer {money_fmt} ke @{target_name}?\n\n"
-            f"Jumlah besar ({money_fmt}) perlu konfirmasi.",
+            t("transfer_confirm", lang, amount=money_fmt, target=target_name) + f"\n\nJumlah besar ({money_fmt}) perlu konfirmasi.",
             parse_mode="Markdown",
             reply_markup=confirm_keyboard(confirm_id, lang),
         )

@@ -29,7 +29,7 @@ async def cmd_lunas(update: Update, context: ContextTypes.DEFAULT_TYPE):
     balance = user_data["balance"]
 
     if debt <= 0:
-        await update.message.reply_text("✅ Kamu tidak punya utang! Bebas hutang! 🎉")
+        await update.message.reply_text(t("lunas_no_debt", lang))
         return
 
     amount = debt
@@ -43,19 +43,19 @@ async def cmd_lunas(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 amount = int(first)
             except ValueError:
-                await update.message.reply_text("Jumlah harus angka.")
+                await update.message.reply_text(t("lunas_amount_not_number", lang))
                 return
             if len(context.args) >= 2 and context.args[1].startswith("@"):
                 target_name = parse_mention(context.args[1])
 
     if amount <= 0:
-        await update.message.reply_text("Jumlah minimal 1.")
+        await update.message.reply_text(t("lunas_min_amount", lang))
         return
     if amount > debt:
         amount = debt
     if balance < amount:
         await update.message.reply_text(
-            f"Saldo kamu cuma {format_money(balance, lang)}. Gak cukup buat bayar {format_money(amount, lang)}.",
+            t("lunas_insufficient", lang, balance=format_money(balance, lang), amount=format_money(amount, lang)),
             reply_markup=back_to_main_keyboard(lang),
         )
         return
@@ -75,15 +75,10 @@ async def cmd_lunas(update: Update, context: ContextTypes.DEFAULT_TYPE):
             target_name = None
 
     remaining = debt - amount
-    text = (
-        f"✅ *Pembayaran Berhasil!*\n\n"
-        f"Dibayar: {format_money(amount, lang)} ke {paid_to}\n"
-        f"Sisa utang: {format_money(remaining, lang)}\n"
-        f"💰 Credit score +{CREDIT_REPAY_BONUS}!"
-    )
+    text = t("lunas_success", lang, amount=format_money(amount, lang), paid_to=paid_to, remaining=format_money(remaining, lang), bonus=CREDIT_REPAY_BONUS)
     if target_name:
-        text += f"\n\n💸 Uang langsung dikirim ke @{safe(target_name)}!"
+        text += t("lunas_paid_to_player", lang, target=safe(target_name))
     else:
-        text += f"\n\n🏛️ Uang lenyap ke sistem (bank sentral)."
+        text += t("lunas_paid_to_system", lang)
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

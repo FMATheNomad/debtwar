@@ -32,16 +32,16 @@ async def stats_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chaos = traps_set + full.get("total_lent", 0) // 100 + full.get("total_collected", 0) // 100
 
     text = (
-        f"📊 *Statistik Pemain*\n\n"
-        f"👑 Title: *{title_name}*\n"
-        f"💀 Chaos Score: *{chaos}*\n\n"
-        f"💰 Total Pinjaman: {full.get('total_lent', 0)}\n"
-        f"💸 Total Tagihan: {full.get('total_collected', 0)}\n"
-        f"🪤 Jebakan: {traps_set} ({trap_rate} sukses)\n"
-        f"🏔️ Saldo Tertinggi: {peak}\n"
-        f"💀 Bangkrut: {full.get('bankrupt_count', 0)}x\n"
-        f"🎁 Daily Diklaim: {full.get('total_daily_claimed', 0)}x\n"
-        f"🔥 Daily Streak: {full.get('daily_streak', 0)} hari\n"
+        f"{t('stats_title', lang)}\n\n"
+        f"{t('stats_title_label', lang, title=title_name)}\n"
+        f"{t('stats_chaos_score_label', lang, score=chaos)}\n\n"
+        f"{t('stats_total_lent_label', lang, amount=full.get('total_lent', 0))}\n"
+        f"{t('stats_total_collected_label', lang, amount=full.get('total_collected', 0))}\n"
+        f"{t('stats_traps_label', lang, count=traps_set, rate=trap_rate)}\n"
+        f"{t('stats_peak_balance_label', lang, amount=peak)}\n"
+        f"{t('stats_bankruptcies_label', lang, count=full.get('bankrupt_count', 0))}\n"
+        f"{t('stats_daily_claimed_label', lang, count=full.get('total_daily_claimed', 0))}\n"
+        f"{t('stats_daily_streak_label', lang, days=full.get('daily_streak', 0))}\n"
     )
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

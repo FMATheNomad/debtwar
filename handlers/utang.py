@@ -58,7 +58,7 @@ async def cmd_utang(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
         else:
             await update.message.reply_text(
-                "Reply pesan + ketik jumlah.\nContoh: `/utang 200` (sambil reply pesan target)",
+                t("utang_reply_prompt", lang),
                 parse_mode="Markdown",
             )
             return
@@ -77,7 +77,7 @@ async def cmd_utang(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
     else:
         await update.message.reply_text(
-            "Reply pesan target atau ketik:\n`/utang @username <jumlah>`",
+            t("utang_format_help", lang),
             parse_mode="Markdown",
         )
         return

@@ -29,11 +29,7 @@ async def cmd_spy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args and not reply:
         stats = await get_spy_stats(user.id)
         await update.message.reply_text(
-            f"🕵️ *Spy System*\n\n"
-            f"Gunakan: /spy @username\n"
-            f"Atau reply pesan target + /spy\n"
-            f"Biaya: {format_money(SPY_COST, lang)}\n\n"
-            f"📊 Spy Stats: {stats['total']} total | {stats['successes']} sukses | {stats['failures']} gagal",
+            t("spy_help", lang, cost=format_money(SPY_COST, lang), total=stats['total'], successes=stats['successes'], failures=stats['failures']),
             parse_mode="Markdown",
             reply_markup=back_to_main_keyboard(lang),
         )

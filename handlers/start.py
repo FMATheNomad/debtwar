@@ -42,7 +42,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     ghost_notifs = await get_ghost_notifications(uname)
     if ghost_notifs:
-        extra += "\n\n\U0001f514 *Aktivitas saat kamu offline:*"
+        extra += t("ghost_summary_title", lang)
         for n in ghost_notifs:
             atype = n.get("action_type", "")
             aname = n.get("from_name", "???")
@@ -52,14 +52,14 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             elif atype == "jebak":
                 extra += t("ghost_action_trap", lang, name=aname, amount=aamt)
             else:
-                extra += f"\n\U0001f4ac @{aname} melakukan {atype} ({aamt})"
+                extra += t("start_ghost_unknown", lang, name=aname, action=atype, amount=aamt)
         extra += t("ghost_join_cta", lang)
         await clear_ghost_notifications(uname)
 
     balance_label = t("welcome_new_user", lang) if is_new else t("welcome_returning_user", lang)
 
     welcome_text = (
-        f"\U0001f44b Selamat datang, {user.first_name}!\n\n"
+        f"{t('start_welcome', lang, name=user.first_name)}\n\n"
         f"{balance_label}: *{money}*"
         f"{extra}"
     )

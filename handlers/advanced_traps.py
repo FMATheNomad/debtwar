@@ -20,14 +20,17 @@ async def cmd_trap_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await register_user(user.id, get_username_or_fallback(user), lang)
 
     traps = await get_available_traps(user.id)
-    text = "🪤 *Advanced Traps*\n\n"
+    trap_list = ""
     for t_info in traps:
-        text += (
-            f"• *{t_info['name']}*\n"
-            f"  Rate: {int(t_info['success_rate']*100)}% | DMG: {t_info['min_damage']}-{t_info['max_damage']}\n"
-            f"  CD: {t_info['cooldown_seconds']}s | Cost: {t_info['cost']}\n\n"
-        )
-    text += "Gunakan: /trap <nama> @username\nContoh: /trap phishing @fariz"
+        trap_list += t("traps_list_item", lang,
+            name=t_info['name'],
+            rate=int(t_info['success_rate']*100),
+            min=t_info['min_damage'],
+            max=t_info['max_damage'],
+            cd=t_info['cooldown_seconds'],
+            cost=t_info['cost'],
+        ) + "\n\n"
+    text = t("traps_list_title", lang, trap_list=trap_list.strip())
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
 
@@ -74,14 +77,14 @@ async def cmd_trap(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reward = int(result["damage"] * 0.2)
         await update_balance(user.id, reward)
 
-        text = (
-            f"🪤 *{result['trap_name']} BERHASIL!*\n\n"
-            f"🎯 Target: @{target_name}\n"
-            f"💥 Damage: +{format_money(result['damage'], lang)} debt\n"
-            f"💰 Reward: +{format_money(reward, lang)}"
+        text = t("traps_success", lang,
+            name=result['trap_name'],
+            target=target_name,
+            damage=format_money(result['damage'], lang),
+            reward=format_money(reward, lang),
         )
     else:
         await modify_credit_score(user.id, -CREDIT_TRAP_FAIL_PENALTY)
-        text = f"❌ *{result['trap_name']} GAGAL!*\n\nJebakan tidak mempan ke @{target_name}."
+        text = t("traps_fail", lang, name=result['trap_name'], target=target_name)
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

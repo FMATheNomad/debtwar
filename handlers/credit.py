@@ -19,18 +19,18 @@ async def credit_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     full = await get_user_full(user.id)
 
     text = (
-        f"💳 *Credit Score*\n\n"
-        f"📊 Skor: *{score}/1000*\n"
-        f"🏅 Tier: *{tier['tier']} ({tier['label']})*\n\n"
-        f"🔹 Mod Bunga: {tier['multipliers']['interest']}x\n"
-        f"🔹 Mod Jebakan: {tier['multipliers']['trap_success']}x\n"
-        f"🔹 Mod Spy: {tier['multipliers']['spy_success']}x\n\n"
+        f"{t('credit_title', lang)}\n\n"
+        f"{t('credit_skor_label', lang, score=score)}\n"
+        f"{t('credit_tier_label', lang, tier=tier['tier'], label=tier['label'])}\n\n"
+        f"{t('credit_mod_interest', lang, value=tier['multipliers']['interest'])}\n"
+        f"{t('credit_mod_trap', lang, value=tier['multipliers']['trap_success'])}\n"
+        f"{t('credit_mod_spy', lang, value=tier['multipliers']['spy_success'])}\n\n"
     )
 
     if full:
         text += (
-            f"✅ Total Dibayar: {full.get('total_repaid', 0)}\n"
-            f"❌ Total Gagal Bayar: {full.get('total_defaulted', 0)}\n"
+            f"{t('credit_repaid_total', lang, amount=full.get('total_repaid', 0))}\n"
+            f"{t('credit_defaulted_total', lang, amount=full.get('total_defaulted', 0))}\n"
         )
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

@@ -32,13 +32,15 @@ async def get_npc_info(npc_id: str, lang: str) -> str:
     npc = NPCS.get(npc_id)
     if not npc:
         return None
-    return f"*{npc['name']}*\n{npc['desc']}"
+    name = t(f"npc_{npc_id}_name", lang)
+    desc = t(f"npc_{npc_id}_desc", lang)
+    return f"*{name}*\n{desc}"
 
 
 async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dict:
     npc = NPCS.get(npc_id)
     if not npc:
-        return {"ok": False, "text": "NPC tidak dikenal."}
+        return {"ok": False, "text": t("npc_not_found", lang)}
 
     user = await get_user_full(user_id)
     if not user:
@@ -55,27 +57,26 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             await add_transaction(user_id, f"npc_{npc_id}", "borrow", amount)
             return {
                 "ok": True,
-                "text": f"🧛 *{npc['name']}*\n\n"
-                        f"\"Pinjem {format_money(amount, lang)}? OK, plus bunga {int(NPC_LOAN_SHARK_INTEREST*100)}%. "
-                        f"Jangan lupa bayar ya... atau... 😈\"\n\n"
-                        f"💸 Diterima: +{format_money(amount, lang)}"
-                        f"\n💳 Utang: +{format_money(int(amount * NPC_LOAN_SHARK_INTEREST), lang)} (bunga)",
+                "text": f"🧛 *{t('npc_loan_shark_name', lang)}*\n\n"
+                        f"\"{t('npc_loan_shark_borrow', lang, amount=format_money(amount, lang), interest=int(NPC_LOAN_SHARK_INTEREST*100))}\"\n\n"
+                        f"{t('npc_loan_shark_borrow_received', lang, amount=format_money(amount, lang))}"
+                        f"\n{t('npc_loan_shark_borrow_debt', lang, amount=format_money(int(amount * NPC_LOAN_SHARK_INTEREST), lang))}",
             }
         elif action == "pay":
             debt = user["debt"]
             if debt <= 0:
-                return {"ok": False, "text": "Kamu tidak punya utang ke Boris."}
+                return {"ok": False, "text": t("npc_loan_shark_no_debt", lang)}
             if user["balance"] < debt:
-                return {"ok": False, "text": f"Saldo tidak cukup! Utangmu {format_money(debt, lang)}, saldomu {format_money(user['balance'], lang)}."}
+                return {"ok": False, "text": t("npc_loan_shark_insufficient", lang, debt=format_money(debt, lang), balance=format_money(user['balance'], lang))}
             await update_balance(user_id, -debt)
             await update_debt(user_id, -debt)
             await log_interaction(user_id, npc_id, "pay", debt)
             await add_transaction(user_id, f"npc_{npc_id}", "pay", debt)
             return {
                 "ok": True,
-                "text": f"🧛 *{npc['name']}*\n\n"
-                        f"\"Lunas. {format_money(debt, lang)} diterima. Pintu selalu terbuka untukmu...\"\n\n"
-                        f"✅ Utang lunas!",
+                "text": f"🧛 *{t('npc_loan_shark_name', lang)}*\n\n"
+                        f"\"{t('npc_loan_shark_pay_success', lang, amount=format_money(debt, lang))}\"\n\n"
+                        f"{t('npc_loan_shark_paid_off', lang)}",
             }
 
     elif npc_id == "mafia_boss":
@@ -84,9 +85,8 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             if user["balance"] < cost:
                 return {
                     "ok": False,
-                    "text": f"🕴️ *{npc['name']}*\n\n"
-                            f"\"Misi butuh modal {format_money(cost, lang)} untuk suap dan peralatan. "
-                            f"Saldomu tidak cukup. Kembali kalau sudah punya duit.\"",
+                    "text": f"🕴️ *{t('npc_mafia_boss_name', lang)}*\n\n"
+                            f"\"{t('npc_mafia_insufficient', lang, cost=format_money(cost, lang))}\"",
                 }
 
             await update_balance(user_id, -cost)
@@ -96,11 +96,9 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 await add_transaction(user_id, f"npc_{npc_id}", "mission_fail", cost)
                 return {
                     "ok": True,
-                    "text": f"🕴️ *{npc['name']}*\n\n"
-                            f"\"Misi gagal! Informasi bocor, target kabur. "
-                            f"Kamu kehilangan modal {format_money(cost, lang)}. "
-                            f"Hilang dari sini sebelum bos marah.\"\n\n"
-                            f"❌ Rugi: -{format_money(cost, lang)}",
+                    "text": f"🕴️ *{t('npc_mafia_boss_name', lang)}*\n\n"
+                            f"\"{t('npc_mafia_fail', lang, cost=format_money(cost, lang))}\"\n\n"
+                            f"{t('npc_mafia_fail_label', lang, cost=format_money(cost, lang))}",
                 }
 
             reward = random.randint(NPC_MISSION_REWARD_MIN, NPC_MISSION_REWARD_MAX)
@@ -108,21 +106,23 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             await log_interaction(user_id, npc_id, "mission", reward - cost)
             await add_transaction(user_id, f"npc_{npc_id}", "mission", reward)
             missions = [
-                "Bakar warung saingan",
-                "Tagih utang ke Debtor",
-                "Curi data nasabah bank",
-                "Sabotase gang lawan",
-                "Lindungi bos dari raid",
+                "npc_mission_burn_shop",
+                "npc_mission_collect_debt",
+                "npc_mission_steal_data",
+                "npc_mission_sabotage",
+                "npc_mission_protect_boss",
             ]
-            mission = random.choice(missions)
+            mission_key = random.choice(missions)
+            mission = t(mission_key, lang)
             net = reward - cost
+            sign = "+" if net >= 0 else ""
             return {
                 "ok": True,
-                "text": f"🕴️ *{npc['name']}*\n\n"
-                        f"\"Ada misi untukmu: *{mission}*. Lakukan diam-diam.\"\n\n"
-                        f"💸 Modal: -{format_money(cost, lang)}\n"
-                        f"💰 Reward: +{format_money(reward, lang)}\n"
-                        f"📊 Total: {'+' if net >= 0 else ''}{format_money(net, lang)}",
+                "text": f"🕴️ *{t('npc_mafia_boss_name', lang)}*\n\n"
+                        f"\"{t('npc_mafia_mission_accept', lang, mission=mission)}\"\n\n"
+                        f"{t('npc_mission_cost_label', lang, cost=format_money(cost, lang))}\n"
+                        f"{t('npc_mission_reward_label', lang, reward=format_money(reward, lang))}\n"
+                        f"{t('npc_mission_total_label', lang, total=sign + format_money(net, lang))}",
             }
 
     elif npc_id == "scammer":
@@ -134,8 +134,8 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 await add_transaction(user_id, f"npc_{npc_id}", "phish_fail", loss)
                 return {
                     "ok": True,
-                    "text": f"🐍 *{npc['name']}*\n\n"
-                            f"\"Hehe, kena tipu! Kamu kehilangan {format_money(loss, lang)}. Next time jangan percaya orang kayak aku.\"",
+                    "text": f"🐍 *{t('npc_scammer_name', lang)}*\n\n"
+                            f"\"{t('npc_scammer_fail', lang, loss=format_money(loss, lang))}\"",
                 }
             else:
                 gain = random.randint(30, 150)
@@ -144,8 +144,8 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
                 await add_transaction(user_id, f"npc_{npc_id}", "phish_success", gain)
                 return {
                     "ok": True,
-                    "text": f"🐍 *{npc['name']}*\n\n"
-                            f"\"Kamu berhasil membalikkan tipuan! Dapet {format_money(gain, lang)} dari si penipu.\"",
+                    "text": f"🐍 *{t('npc_scammer_name', lang)}*\n\n"
+                            f"\"{t('npc_scammer_success', lang, gain=format_money(gain, lang))}\"",
                 }
 
     elif npc_id == "collector":
@@ -155,11 +155,11 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             from database.user_repo import get_all_debtors
             debtors = await get_all_debtors()
             if not debtors:
-                return {"ok": False, "text": "Tidak ada yang punya utang saat ini."}
+                return {"ok": False, "text": t("npc_collector_no_debtors", lang)}
             target = random.choice(debtors)
             amount = target["debt"]
             if amount <= 0:
-                return {"ok": False, "text": "Target tidak punya utang."}
+                return {"ok": False, "text": t("npc_collector_no_debt", lang)}
             fee = int(amount * 0.3)
             net = amount - fee
             await update_balance(user_id, net)
@@ -168,13 +168,13 @@ async def interact_npc(user_id: int, npc_id: str, action: str, lang: str) -> dic
             await add_transaction(user_id, f"npc_{npc_id}", "collect", net)
             return {
                 "ok": True,
-                "text": f"💪 *{npc['name']}*\n\n"
-                        f"\"Beres! Aku tagih @{target['username']} sebesar {format_money(amount, lang)}. "
-                        f"Fee ku 30% ya.\"\n\n"
-                        f"💰 Kamu terima: {format_money(net, lang)}",
+                "text": f"💪 *{t('npc_collector_name', lang)}*\n\n"
+                        f"\"{t('npc_collector_success', lang, target=target['username'], amount=format_money(amount, lang))}\"\n\n"
+                        f"{t('npc_collector_received', lang, net=format_money(net, lang))}",
             }
 
-    return {"ok": False, "text": f"*{npc['name']}* tidak mengerti perintah itu."}
+    npc_name = t(f"npc_{npc_id}_name", lang)
+    return {"ok": False, "text": t("npc_action_unknown", lang).format(npc_name)}
 
 
 async def log_interaction(user_id: int, npc_type: str, action: str, reward: int):

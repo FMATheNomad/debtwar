@@ -14,11 +14,11 @@ async def file_case(plaintiff_id: int, defendant_name: str, charge: str, lang: s
     if not defendant:
         return {"ok": False, "text": t("target_not_found", lang, username=defendant_name)}
     if defendant[0] == plaintiff_id:
-        return {"ok": False, "text": "Gugat diri sendiri? Aneh."}
+        return {"ok": False, "text": t("court_sue_self", lang)}
 
     plaintiff = await get_user_full(plaintiff_id)
     if not plaintiff or plaintiff["balance"] < COURT_LAWYER_COST:
-        return {"ok": False, "text": f"Butuh {format_money(COURT_LAWYER_COST, lang)} untuk bayar pengacara."}
+        return {"ok": False, "text": t("court_need_fee", lang, fee=format_money(COURT_LAWYER_COST, lang))}
 
     await update_balance(plaintiff_id, -COURT_LAWYER_COST)
 
@@ -36,7 +36,7 @@ async def file_case(plaintiff_id: int, defendant_name: str, charge: str, lang: s
 
     return {
         "ok": True,
-        "text": f"🏛️ *Gugatan diajukan!*\n\nKasus #{case_id}\nTerdakwa: @{defendant_name}\nTuduhan: {charge}\n\nVoting akan berlangsung 1 jam.",
+        "text": t("court_case_filed", lang, case_id=case_id, defendant=defendant_name, charge=charge),
         "case_id": case_id,
     }
 
@@ -49,7 +49,7 @@ async def vote_case(voter_id: int, case_id: int, vote: str, lang: str) -> dict:
         ) as cur:
             case = await cur.fetchone()
             if not case:
-                return {"ok": False, "text": "Kasus tidak ditemukan atau sudah diputus."}
+                return {"ok": False, "text": t("court_case_not_found", lang)}
 
         await conn.execute(
             "INSERT OR IGNORE INTO court_votes (case_id, voter_id, vote) VALUES (?, ?, ?)",
@@ -59,7 +59,7 @@ async def vote_case(voter_id: int, case_id: int, vote: str, lang: str) -> dict:
     finally:
         await conn.close()
 
-    return {"ok": True, "text": f"🗳️ Vote direkam! Kamu memilih *{vote.upper()}*."}
+    return {"ok": True, "text": t("court_vote_recorded", lang, vote=vote.upper())}
 
 
 async def resolve_case(case_id: int, lang: str = "en") -> dict:
@@ -90,10 +90,10 @@ async def resolve_case(case_id: int, lang: str = "en") -> dict:
             fine = min(guilty * 100, COURT_MAX_FINE)
             await update_balance(case["defendant_id"], -fine)
             await update_balance(case["plaintiff_id"], fine)
-            result_text = f"⚖️ *VERDIK: BERSALAH!*\n\nDenda {format_money(fine, lang)} dibayarkan ke penggugat."
+            result_text = t("court_verdict_guilty", lang, fine=format_money(fine, lang))
         else:
             verdict = "innocent"
-            result_text = "⚖️ *VERDIK: TIDAK BERSALAH!*\n\nTerdakwa dibebaskan."
+            result_text = t("court_verdict_innocent", lang)
 
         await conn.execute(
             "UPDATE court_cases SET status = 'verdict', verdict = ? WHERE id = ?",

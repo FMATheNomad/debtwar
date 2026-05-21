@@ -19,11 +19,7 @@ async def cmd_invite(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = (await context.bot.get_me()).username
     link = f"https://t.me/{bot_username}?start={code}"
 
-    text = (
-        f"🔗 *Invite Link*\n\n"
-        f"Kirim link ini ke temenmu:\n`{link}`\n\n"
-        f"Kalo dia join, kalian otomatis terhubung!"
-    )
+    text = t("invite_text", lang, link=link)
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
 
 
@@ -36,22 +32,15 @@ async def cmd_contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     contacts = await get_contacts(user.id, query)
 
     if not contacts and not query:
-        text = (
-            f"📇 *Contacts*\n\n"
-            f"Kamu belum punya kontak.\n"
-            f"Main sama orang dulu, atau gunakan `/invite` buat ngajak temen!"
-        )
+        text = t("contacts_empty", lang)
     elif not contacts and query:
-        text = (
-            f"📇 *Contacts*\n\n"
-            f"Gak ada kontak cocok dengan \"{query}\"."
-        )
+        text = t("contacts_not_found", lang, query=query)
     else:
         lines = [f"📇 *Contacts* {'— ' + query if query else ''}\n"]
         for c in contacts:
             name = c.get("display_name") or c.get("username") or f"User#{c['contact_id']}"
             if c["status"] == "pending":
-                lines.append(f"• `{c['contact_id']}` — {name} ⏳ (undang dulu!)")
+                lines.append(f"• `{c['contact_id']}` — {name} {t('contacts_pending', lang)}")
             else:
                 lines.append(f"• `{c['contact_id']}` — {name} ✅")
         text = "\n".join(lines)
@@ -64,27 +53,21 @@ async def cmd_player(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = "id" if getattr(user, "language_code", "").startswith("id") else "en"
 
     if not context.args:
-        await update.message.reply_text("Gunakan: `/player <user_id>`", parse_mode="Markdown")
+        await update.message.reply_text(t("player_usage", lang), parse_mode="Markdown")
         return
 
     try:
         pid = int(context.args[0])
     except ValueError:
-        await update.message.reply_text("User ID harus angka.")
+        await update.message.reply_text(t("player_id_not_number", lang))
         return
 
     target = await get_user_by_id(pid)
     if not target:
-        await update.message.reply_text("Player tidak ditemukan.")
+        await update.message.reply_text(t("player_not_found", lang))
         return
 
     from utils.formatter import format_money
     name = target.get("display_name") or target.get("username") or f"User#{target['id']}"
-    text = (
-        f"👤 *Player Info*\n\n"
-        f"ID: `{target['id']}`\n"
-        f"Nama: {name}\n"
-        f"Balance: {format_money(target['balance'], lang)}\n"
-        f"Utang: {format_money(target['debt'], lang)}"
-    )
+    text = t("player_info", lang, id=target['id'], name=name, balance=format_money(target['balance'], lang), debt=format_money(target['debt'], lang))
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

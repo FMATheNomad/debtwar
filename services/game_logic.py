@@ -143,7 +143,7 @@ async def execute_jebak(trapper_id: int, trapper_name: str, target_name: str, la
     if await has_active_shield(target["id"], "anti_trap"):
         return {
             "ok": False,
-            "text": f"🛡️ @{target_name} memiliki *Basic Shield*! Jebakan tidak mempan.",
+            "text": t("shield_blocks_trap", lang, target=target_name),
         }
 
     result = calculate_trap()

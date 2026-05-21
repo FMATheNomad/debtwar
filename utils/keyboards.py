@@ -9,8 +9,8 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("menu_btn_daily", lang), callback_data="daily_claim"),
         ],
         [
-            InlineKeyboardButton("📇 Contacts", callback_data="social_contacts"),
-            InlineKeyboardButton("🔗 Invite", callback_data="social_invite"),
+            InlineKeyboardButton(t("menu_btn_contacts", lang), callback_data="social_contacts"),
+            InlineKeyboardButton(t("menu_btn_invite", lang), callback_data="social_invite"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_credit", lang), callback_data="credit_show"),
@@ -21,15 +21,15 @@ def main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("menu_btn_chaos", lang), callback_data="menu_chaos"),
         ],
         [
-            InlineKeyboardButton("🏦 Bank", callback_data="bank_info"),
-            InlineKeyboardButton("📜 History", callback_data="history_show"),
+            InlineKeyboardButton(t("menu_btn_bank", lang), callback_data="bank_info"),
+            InlineKeyboardButton(t("menu_btn_history", lang), callback_data="history_show"),
         ],
         [
-            InlineKeyboardButton("💹 Investasi", callback_data="invest_show"),
+            InlineKeyboardButton(t("menu_btn_invest", lang), callback_data="invest_show"),
         ],
         [
-            InlineKeyboardButton("🏴 Social", callback_data="social_menu"),
-            InlineKeyboardButton("📰 World News", callback_data="world_news_show"),
+            InlineKeyboardButton(t("menu_btn_social", lang), callback_data="social_menu"),
+            InlineKeyboardButton(t("menu_btn_world_news", lang), callback_data="world_news_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_faq", lang), callback_data="faq_show"),
@@ -46,22 +46,22 @@ def chaos_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(t("menu_btn_jebak", lang), callback_data="action_jebak"),
-            InlineKeyboardButton("🪤 Traps", callback_data="chaos_traps"),
+            InlineKeyboardButton(t("chaos_btn_traps", lang), callback_data="chaos_traps"),
         ],
         [
-            InlineKeyboardButton("🔄 Transfer", callback_data="action_transfer"),
+            InlineKeyboardButton(t("menu_btn_transfer", lang), callback_data="action_transfer"),
         ],
         [
-            InlineKeyboardButton("🕵️ Spy", callback_data="chaos_spy"),
-            InlineKeyboardButton("💣 Sabotage", callback_data="chaos_sabo"),
+            InlineKeyboardButton(t("chaos_btn_spy", lang), callback_data="chaos_spy"),
+            InlineKeyboardButton(t("chaos_btn_sabotage", lang), callback_data="chaos_sabo"),
         ],
         [
-            InlineKeyboardButton("🎰 Casino", callback_data="chaos_casino"),
-            InlineKeyboardButton("🎁 Lootbox", callback_data="chaos_lootbox"),
+            InlineKeyboardButton(t("chaos_btn_casino", lang), callback_data="chaos_casino"),
+            InlineKeyboardButton(t("chaos_btn_lootbox", lang), callback_data="chaos_lootbox"),
         ],
         [
-            InlineKeyboardButton("🏪 Market", callback_data="chaos_market"),
-            InlineKeyboardButton("💳 Lunas", callback_data="chaos_lunas"),
+            InlineKeyboardButton(t("chaos_btn_market", lang), callback_data="chaos_market"),
+            InlineKeyboardButton(t("chaos_btn_lunas", lang), callback_data="chaos_lunas"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -94,11 +94,11 @@ def profile_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(t("menu_btn_stats", lang), callback_data="stats_show"),
         ],
         [
-            InlineKeyboardButton("👑 Titles", callback_data="titles_show"),
-            InlineKeyboardButton("🏆 Achievements", callback_data="achievements_show"),
+            InlineKeyboardButton(t("menu_btn_titles", lang), callback_data="titles_show"),
+            InlineKeyboardButton(t("profile_btn_achievements", lang), callback_data="achievements_show"),
         ],
         [
-            InlineKeyboardButton("⚙️ Set Name", callback_data="profile_settings"),
+            InlineKeyboardButton(t("profile_btn_set_name", lang), callback_data="profile_settings"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_refresh", lang), callback_data="profile_show"),
@@ -173,14 +173,14 @@ def gang_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(t("menu_btn_leaderboard", lang), callback_data="gang_leaderboard"),
-            InlineKeyboardButton("➕ Create", callback_data="gang_create"),
+            InlineKeyboardButton(t("gang_btn_create", lang), callback_data="gang_create"),
         ],
         [
-            InlineKeyboardButton("🔗 Join", callback_data="gang_join"),
-            InlineKeyboardButton("🚪 Leave", callback_data="gang_leave"),
+            InlineKeyboardButton(t("gang_btn_join", lang), callback_data="gang_join"),
+            InlineKeyboardButton(t("gang_btn_leave", lang), callback_data="gang_leave"),
         ],
         [
-            InlineKeyboardButton("🏦 Vault", callback_data="gang_vault"),
+            InlineKeyboardButton(t("gang_btn_vault", lang), callback_data="gang_vault"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -192,11 +192,11 @@ def gang_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def bank_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("📥 Deposit", callback_data="bank_deposit"),
-            InlineKeyboardButton("📤 Withdraw", callback_data="bank_withdraw"),
+            InlineKeyboardButton(t("bank_btn_deposit", lang), callback_data="bank_deposit"),
+            InlineKeyboardButton(t("bank_btn_withdraw", lang), callback_data="bank_withdraw"),
         ],
         [
-            InlineKeyboardButton("📜 Riwayat", callback_data="bank_history"),
+            InlineKeyboardButton(t("bank_btn_history", lang), callback_data="bank_history"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -208,11 +208,11 @@ def bank_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def casino_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("🎰 Slots", callback_data="casino_slots"),
-            InlineKeyboardButton("🃏 Blackjack", callback_data="casino_bj"),
+            InlineKeyboardButton(t("casino_btn_slots", lang), callback_data="casino_slots"),
+            InlineKeyboardButton(t("casino_btn_blackjack", lang), callback_data="casino_bj"),
         ],
         [
-            InlineKeyboardButton("🎱 Roulette", callback_data="casino_roulette"),
+            InlineKeyboardButton(t("casino_btn_roulette", lang), callback_data="casino_roulette"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -224,8 +224,8 @@ def casino_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def market_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("🏪 Shop", callback_data="market_show"),
-            InlineKeyboardButton("🎒 Inventory", callback_data="inventory_show"),
+            InlineKeyboardButton(t("market_btn_shop", lang), callback_data="market_show"),
+            InlineKeyboardButton(t("market_btn_inventory", lang), callback_data="inventory_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -237,20 +237,20 @@ def market_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def lootbox_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("📦 Common (200)", callback_data="lb_buy_common"),
-            InlineKeyboardButton("🎁 Rare (500)", callback_data="lb_buy_rare"),
+            InlineKeyboardButton(t("lootbox_btn_buy_common", lang), callback_data="lb_buy_common"),
+            InlineKeyboardButton(t("lootbox_btn_buy_rare", lang), callback_data="lb_buy_rare"),
         ],
         [
-            InlineKeyboardButton("💎 Epic (1200)", callback_data="lb_buy_epic"),
-            InlineKeyboardButton("👑 Legendary (3000)", callback_data="lb_buy_leg"),
+            InlineKeyboardButton(t("lootbox_btn_buy_epic", lang), callback_data="lb_buy_epic"),
+            InlineKeyboardButton(t("lootbox_btn_buy_legendary", lang), callback_data="lb_buy_leg"),
         ],
         [
-            InlineKeyboardButton("📂 Buka Common", callback_data="lb_open_common"),
-            InlineKeyboardButton("📂 Buka Rare", callback_data="lb_open_rare"),
+            InlineKeyboardButton(t("lootbox_btn_open_common", lang), callback_data="lb_open_common"),
+            InlineKeyboardButton(t("lootbox_btn_open_rare", lang), callback_data="lb_open_rare"),
         ],
         [
-            InlineKeyboardButton("📂 Buka Epic", callback_data="lb_open_epic"),
-            InlineKeyboardButton("📂 Buka Legendary", callback_data="lb_open_leg"),
+            InlineKeyboardButton(t("lootbox_btn_open_epic", lang), callback_data="lb_open_epic"),
+            InlineKeyboardButton(t("lootbox_btn_open_legendary", lang), callback_data="lb_open_leg"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -262,15 +262,15 @@ def lootbox_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def trap_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("🎣 Fake Investment", callback_data="trap_fake_investment"),
-            InlineKeyboardButton("📧 Phishing", callback_data="trap_phishing"),
+            InlineKeyboardButton(t("trap_btn_fake_investment", lang), callback_data="trap_fake_investment"),
+            InlineKeyboardButton(t("trap_btn_phishing", lang), callback_data="trap_phishing"),
         ],
         [
-            InlineKeyboardButton("🧾 Tax Trap", callback_data="trap_tax"),
-            InlineKeyboardButton("🔺 Pyramid", callback_data="trap_pyramid"),
+            InlineKeyboardButton(t("trap_btn_tax_trap", lang), callback_data="trap_tax"),
+            InlineKeyboardButton(t("trap_btn_pyramid", lang), callback_data="trap_pyramid"),
         ],
         [
-            InlineKeyboardButton("💀 Mafia Extortion", callback_data="trap_mafia_extortion"),
+            InlineKeyboardButton(t("trap_btn_mafia_extortion", lang), callback_data="trap_mafia_extortion"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -282,12 +282,12 @@ def trap_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def npc_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("🧛 Loan Shark", callback_data="npc_loan_shark"),
-            InlineKeyboardButton("🕴️ Mafia Boss", callback_data="npc_mafia_boss"),
+            InlineKeyboardButton(t("npc_btn_loan_shark", lang), callback_data="npc_loan_shark"),
+            InlineKeyboardButton(t("npc_btn_mafia_boss", lang), callback_data="npc_mafia_boss"),
         ],
         [
-            InlineKeyboardButton("🐍 Scammer", callback_data="npc_scammer"),
-            InlineKeyboardButton("💪 Collector", callback_data="npc_collector"),
+            InlineKeyboardButton(t("npc_btn_scammer", lang), callback_data="npc_scammer"),
+            InlineKeyboardButton(t("npc_btn_collector", lang), callback_data="npc_collector"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -299,8 +299,8 @@ def npc_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 def court_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
     keyboard = [
         [
-            InlineKeyboardButton("⚖️ File Case", callback_data="court_sue"),
-            InlineKeyboardButton("🗳️ Vote", callback_data="court_vote"),
+            InlineKeyboardButton(t("court_btn_file_case", lang), callback_data="court_sue"),
+            InlineKeyboardButton(t("court_btn_vote", lang), callback_data="court_vote"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),
@@ -310,15 +310,14 @@ def court_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 
 def social_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
-    from utils.translator import t as _t
     keyboard = [
         [
-            InlineKeyboardButton("🏴 Gang", callback_data="gang_menu"),
-            InlineKeyboardButton("🚨 Wanted", callback_data="wanted_show"),
+            InlineKeyboardButton(t("menu_btn_gang", lang), callback_data="gang_menu"),
+            InlineKeyboardButton(t("menu_btn_wanted", lang), callback_data="wanted_show"),
         ],
         [
-            InlineKeyboardButton("🏛️ Court", callback_data="court_show"),
-            InlineKeyboardButton("🤖 NPC", callback_data="npc_show"),
+            InlineKeyboardButton(t("social_btn_court", lang), callback_data="court_show"),
+            InlineKeyboardButton(t("social_btn_npc", lang), callback_data="npc_show"),
         ],
         [
             InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main"),

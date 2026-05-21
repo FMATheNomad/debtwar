@@ -22,17 +22,12 @@ async def cmd_setname(update: Update, context: ContextTypes.DEFAULT_TYPE):
         needs_name = full.get("needs_name", 0) if full else 1
         if needs_name:
             await update.message.reply_text(
-                "👋 Selamat datang di Debt War!\n\n"
-                "Sebelum mulai, kamu harus buat nama display dulu.\n\n"
-                "Gunakan: `/setname <nama>`\n"
-                "Contoh: `/setname Fariz Ganteng`\n\n"
-                "Maks 20 karakter. Huruf, angka, spasi aja.",
+                t("setname_welcome", lang),
                 parse_mode="Markdown",
             )
         else:
             await update.message.reply_text(
-                "Gunakan: `/setname <nama>`\nContoh: `/setname Fariz Ganteng`\n\n"
-                "Maks 20 karakter. Huruf, angka, spasi, dan underscore aja.",
+                t("setname_usage", lang),
                 parse_mode="Markdown",
                 reply_markup=back_to_main_keyboard(lang),
             )
@@ -41,7 +36,7 @@ async def cmd_setname(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = " ".join(context.args).strip()[:20]
     if not re.match(r"^[\w\s]+$", name):
         await update.message.reply_text(
-            "Nama cuma boleh huruf, angka, spasi, dan underscore.",
+            t("setname_invalid_chars", lang),
             reply_markup=back_to_main_keyboard(lang),
         )
         return
@@ -62,9 +57,9 @@ async def cmd_setname(update: Update, context: ContextTypes.DEFAULT_TYPE):
     finally:
         await conn.close()
 
-    text = f"✅ Nama display diubah jadi: *{name}*"
+    text = t("setname_success", lang, name=name)
     if was_new:
-        text += "\n\n🔥 Sekarang kamu bisa main! Ketik /menu untuk mulai."
+        text += t("setname_ready", lang)
 
     await update.message.reply_text(
         text,

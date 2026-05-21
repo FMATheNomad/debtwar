@@ -18,14 +18,14 @@ async def cmd_court(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
         cases = await get_pending_cases()
-        text = "🏛️ *Pengadilan Debt War*\n\n"
+        text = t("court_help_title", lang) + "\n\n"
         if cases:
-            text += "*Kasus Tertunda:*\n"
+            text += t("court_cases_header", lang) + "\n"
             for c in cases:
                 text += f"#{c['id']} — {c['charge']} vs @{c['defendant_name']}\n"
         else:
-            text += "Tidak ada kasus tertunda.\n"
-        text += "\nGunakan:\n/sue @user <tuduhan>\n/vote <case_id> <guilty/innocent>"
+            text += t("court_no_cases", lang) + "\n"
+        text += t("court_help_footer", lang)
         await update.message.reply_text(text, reply_markup=court_menu_keyboard(lang))
         return
 
@@ -41,11 +41,11 @@ async def cmd_court(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             case_id = int(context.args[1])
         except ValueError:
-            await update.message.reply_text("Case ID harus angka.")
+            await update.message.reply_text(t("court_case_id_number", lang))
             return
         vote = context.args[2].lower()
         if vote not in ("guilty", "innocent"):
-            await update.message.reply_text("Vote: guilty atau innocent")
+            await update.message.reply_text(t("court_vote_choice", lang))
             return
         result = await vote_case(user.id, case_id, vote, lang)
         await update.message.reply_text(result["text"], parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

@@ -51,7 +51,7 @@ async def build_profile_text(user, lang: str):
         f"{t('profile_title', lang)}\n\n"
         f"👑 `{title_name}`\n"
         f"💳 Credit: *{credit}*\n"
-        f"📛 Nama: `{display_name}`\n"
+        f"{t('profile_display_name_label', lang)}: `{display_name}`\n"
         f"{t('profile_id', lang)} : `{user.id}`\n"
         f"📌 Tag: `@{username}`\n"
         f"{t('profile_balance', lang)}    : *{money_balance}*\n"
@@ -98,11 +98,11 @@ async def build_profile_text(user, lang: str):
         await conn.close()
 
     if borrowed_from:
-        text += "\n\n📌 *Diutangin oleh:*"
+        text += t("profile_borrowed_from", lang)
         for row in borrowed_from:
             text += f"\n🔹 `{row['from_id']}` — {format_money(row['outstanding'], lang)}"
     if lent_to:
-        text += "\n\n📌 *Kamu ngutangin:*"
+        text += t("profile_lent_to", lang)
         for row in lent_to:
             text += f"\n🔹 `@{row['to_user']}` — {format_money(row['outstanding'], lang)}"
 

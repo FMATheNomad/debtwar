@@ -9,13 +9,16 @@ from database.user_repo import get_user
 
 logger = logging.getLogger(__name__)
 
-TYPE_LABEL = {
-    "utang": "Pinjamkan", "nagih": "Tagihan", "jebak_success": "Jebakan Berhasil",
-    "jebak_fail": "Jebakan Gagal", "transfer": "Transfer", "interest": "Bunga",
-    "interest_profit": "Bunga Masuk", "daily": "Daily Reward", "lootbox": "Lootbox",
-    "bank_deposit": "Deposit Bank", "bank_withdraw": "Tarik Bank",
-    "trap": "Trap", "spy": "Spy", "sabotage": "Sabotase", "system": "Sistem",
-    "invest_buy": "Beli Investasi", "invest_sell": "Jual Investasi",
+TYPE_TRANSLATION_KEYS = {
+    "utang": "history_type_utang", "nagih": "history_type_nagih",
+    "jebak_success": "history_type_jebak_success", "jebak_fail": "history_type_jebak_fail",
+    "transfer": "history_type_transfer", "interest": "history_type_interest",
+    "interest_profit": "history_type_interest_profit", "daily": "history_type_daily",
+    "lootbox": "history_type_lootbox", "bank_deposit": "history_type_bank_deposit",
+    "bank_withdraw": "history_type_bank_withdraw", "trap": "history_type_trap",
+    "spy": "history_type_spy", "sabotage": "history_type_sabotage",
+    "system": "history_type_system", "invest_buy": "history_type_invest_buy",
+    "invest_sell": "history_type_invest_sell",
 }
 
 
@@ -47,15 +50,12 @@ async def history_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     has_more = len(rows) > limit
     rows = rows[:limit]
 
-    text = (
-        f"📜 *Riwayat Transaksi*\n"
-        f"💰 Saldo: *{format_money(current_balance, lang)}*\n\n"
-    )
+    text = t("history_header", lang, balance=format_money(current_balance, lang)) + "\n\n"
     if not rows:
-        text += "Belum ada transaksi."
+        text += t("history_empty", lang)
     else:
         for r in rows:
-            label = TYPE_LABEL.get(r["type"], r["type"])
+            label = t(TYPE_TRANSLATION_KEYS.get(r["type"], r["type"]), lang)
             amt = format_money(r["amount"], lang)
             to = f" → @{r['to_user']}" if r["to_user"] and r["type"] not in ("interest", "daily", "system") else ""
             ts = r["timestamp"][:16] if r["timestamp"] else ""
@@ -63,7 +63,7 @@ async def history_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     buttons = []
     if has_more:
-        buttons.append([InlineKeyboardButton("⬇️ Lainnya", callback_data=f"history_more_{offset + limit}")])
-    buttons.append([InlineKeyboardButton("🔙 Kembali", callback_data="menu_main")])
+        buttons.append([InlineKeyboardButton(t("history_more_btn", lang), callback_data=f"history_more_{offset + limit}")])
+    buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
 
     await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))

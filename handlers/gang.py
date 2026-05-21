@@ -99,7 +99,7 @@ async def gang_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "gang_vault":
         result = await handle_gang_info(user.id, lang)
         if result["ok"]:
-            result["text"] += "\n\n💡 Gunakan: /gang vault deposit/withdraw <jumlah>"
+            result["text"] += t("gang_vault_hint", lang)
     elif data == "gang_menu":
         await query.edit_message_text(t("gang_menu_title", lang), parse_mode="Markdown", reply_markup=gang_menu_keyboard(lang))
         return

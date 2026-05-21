@@ -19,22 +19,24 @@ async def cmd_npc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await register_user(user.id, uname, lang)
 
     if not context.args:
-        text = "🤖 *NPC Hub*\n\n"
+        text = t("npc_hub_title", lang) + "\n\n"
         actions = {
-            "loan_shark": "`borrow` pinjem duit, `pay` bayar utang",
-            "mafia_boss": "`mission` ambil misi",
-            "scammer": "`phish` tipu balik",
-            "collector": "`help_collect` tagih random debtor",
+            "loan_shark": t("npc_hub_action_loan_shark", lang),
+            "mafia_boss": t("npc_hub_action_mafia_boss", lang),
+            "scammer": t("npc_hub_action_scammer", lang),
+            "collector": t("npc_hub_action_collector", lang),
         }
         for nid, ndata in NPCS.items():
-            text += f"• *{ndata['name']}* — `{nid}`\n  {ndata['desc']}\n  Aksi: {actions.get(nid, '')}\n\n"
-        text += "Gunakan: /npc <id> <action>\nContoh: `/npc loan_shark borrow`"
+            nname = t(f"npc_{nid}_name", lang)
+            ndesc = t(f"npc_{nid}_desc", lang)
+            text += f"• *{nname}* — `{nid}`\n  {ndesc}\n  Aksi: {actions.get(nid, '')}\n\n"
+        text += t("npc_hub_usage", lang)
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=npc_menu_keyboard(lang))
         return
 
     npc_id = context.args[0].lower()
     if npc_id not in NPCS:
-        await update.message.reply_text("NPC tidak dikenal. Coba: loan_shark, mafia_boss, scammer, collector")
+        await update.message.reply_text(t("npc_not_found_list", lang))
         return
 
     remaining = await check_cooldown(user.id, f"npc_{npc_id}")
@@ -53,7 +55,7 @@ async def cmd_npc(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if len(context.args) < 2:
         info = await get_npc_info(npc_id, lang)
-        await update.message.reply_text(f"{info}\n\nGunakan: /npc {npc_id} <action>", parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
+        await update.message.reply_text(t("npc_info_usage", lang).format(info, npc_id), parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))
         return
 
     action = context.args[1].lower()

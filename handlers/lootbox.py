@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes
 from utils.translator import t
 from utils.helpers import get_username_or_fallback
 from utils.keyboards import lootbox_menu_keyboard, back_to_main_keyboard
-from utils.disclaimer import LOOTBOX_DISCLAIMER
+from utils.disclaimer import lootbox_disclaimer
 from database.user_repo import register_user
 from services.lootbox_service import buy_lootbox, open_lootbox, get_lootbox_inventory
 from config import LOOTBOX_PRICES
@@ -21,26 +21,26 @@ async def cmd_lootbox(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
         inv = await get_lootbox_inventory(user.id)
-        text = "🎁 *Lootbox System*\n\n"
-        text += "*Harga:*\n"
+        text = t("lootbox_help_header", lang) + "\n\n"
+        text += t("lootbox_price_header", lang) + "\n"
         for rarity, price in LOOTBOX_PRICES.items():
             text += f"• {rarity.upper()}: {format_money(price, lang)}💰\n"
 
-        text += "\n*Inventory:*\n"
+        text += "\n" + t("lootbox_inv_header", lang) + "\n"
         if inv:
             for i in inv:
                 text += f"• {i['lootbox_type'].upper()} x{i['quantity']}\n"
         else:
-            text += "(kosong)\n"
+            text += t("lootbox_inv_empty", lang) + "\n"
 
-        text += "\nGunakan:\n/lootbox buy <rarity>\n/lootbox open <rarity>"
-        text += LOOTBOX_DISCLAIMER
+        text += t("lootbox_help_footer", lang)
+        text += lootbox_disclaimer(lang)
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=lootbox_menu_keyboard(lang))
         return
 
     action = context.args[0].lower()
     if len(context.args) < 2:
-        await update.message.reply_text("Gunakan: /lootbox buy/open <rarity>")
+        await update.message.reply_text(t("lootbox_usage", lang))
         return
 
     rarity = context.args[1].lower()
@@ -53,7 +53,7 @@ async def cmd_lootbox(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action == "open":
         result = await open_lootbox(user.id, rarity, lang)
     else:
-        await update.message.reply_text("Gunakan: /lootbox buy <rarity> atau /lootbox open <rarity>")
+        await update.message.reply_text(t("lootbox_usage_full", lang))
         return
 
     await update.message.reply_text(result["text"], parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

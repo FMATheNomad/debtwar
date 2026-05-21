@@ -33,7 +33,7 @@ async def cmd_buy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await register_user(user.id, uname, lang)
 
     if not context.args:
-        await update.message.reply_text("Gunakan: /buy <item_id>")
+        await update.message.reply_text(t("market_buy_usage", lang))
         return
 
     item_id = context.args[0].lower()
@@ -48,20 +48,20 @@ async def cmd_inventory(update: Update, context: ContextTypes.DEFAULT_TYPE):
     items = await get_user_items(user.id)
     shields = await get_active_shields(user.id)
 
-    text = "🎒 *Inventory*\n\n"
+    text = t("inventory_title", lang) + "\n\n"
 
     if items:
-        text += "*Items:*\n"
+        text += t("inventory_items_header", lang) + "\n"
         for item in items:
             text += f"• {item['name']} x{item['quantity']}\n"
     else:
-        text += "*Items:* (kosong)\n"
+        text += t("inventory_items_header", lang) + " (kosong)\n"
 
     if shields:
-        text += "\n*Active Shields:*\n"
+        text += t("inventory_shields_header", lang) + "\n"
         for s in shields:
             text += f"• {s['shield_type']} (exp: {s['expires_at']})\n"
     else:
-        text += "\n*Shields:* (tidak ada)\n"
+        text += "\n*Shields:* " + t("inventory_shields_none", lang) + "\n"
 
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=back_to_main_keyboard(lang))

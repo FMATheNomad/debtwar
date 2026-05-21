@@ -23,16 +23,16 @@ async def titles_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         unlocked = await get_all_unlocked_titles(user.id)
         unlocked_set = set(unlocked)
 
-        text = f"👑 *Title / Rank*\n\n"
-        text += f"🎯 Title Aktif: *{current_name}*\n\n"
-        text += f"🏅 *Semua Title:*\n"
+        text = f"{t('titles_header', lang)}\n\n"
+        text += f"{t('titles_current_label', lang, title=current_name)}\n\n"
+        text += f"{t('titles_all_header', lang)}\n"
 
         for tid, tdata in TITLES.items():
             unlocked_symbol = "✅" if tid in unlocked_set else "🔒"
-            active_mark = " 👈 AKTIF" if tid == current_id else ""
+            active_mark = t("titles_active_mark", lang) if tid == current_id else ""
             text += f"{unlocked_symbol} {tdata['name']}{active_mark}\n"
 
-        text += "\nKlik title yang sudah di-unlock untuk mengaktifkannya."
+        text += t("titles_click_hint", lang)
 
         buttons = []
         row = []
@@ -44,7 +44,7 @@ async def titles_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     row = []
         if row:
             buttons.append(row)
-        buttons.append([InlineKeyboardButton("🔙 Kembali", callback_data="menu_main")])
+        buttons.append([InlineKeyboardButton(t("menu_btn_back", lang), callback_data="menu_main")])
 
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -65,7 +65,7 @@ async def titles_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await conn.close()
 
         await query.edit_message_text(
-            f"✅ Title aktif diubah ke: *{title_name}*",
+            t("titles_activated", lang, name=title_name),
             parse_mode="Markdown",
             reply_markup=back_to_main_keyboard(lang),
         )

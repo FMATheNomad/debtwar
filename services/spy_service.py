@@ -39,15 +39,15 @@ async def execute_spy(spy_id: int, target_name: str, lang: str) -> dict:
         est_balance = target_dict.get("balance", 0)
         est_debt = target_dict.get("debt", 0)
         chaos = target_dict.get("chaos_score", 0)
-        last_active = "Tidak diketahui"
+        last_active = t("spy_last_active_unknown", lang)
 
         text = (
-            f"🕵️ *Hasil Spy*\n\n"
-            f"🎯 Target: @{target_name}\n"
-            f"💰 Estimasi Saldo: ~{format_money(est_balance, lang)}\n"
-            f"💳 Estimasi Utang: ~{format_money(est_debt, lang)}\n"
-            f"💀 Chaos Score: {chaos}\n"
-            f"📅 Last Active: {last_active}\n"
+            f"{t('spy_result_title', lang)}\n\n"
+            f"{t('spy_result_target', lang, username=target_name)}\n"
+            f"{t('spy_balance_est', lang, balance=format_money(est_balance, lang))}\n"
+            f"{t('spy_debt_est', lang, debt=format_money(est_debt, lang))}\n"
+            f"{t('spy_chaos_score_label', lang, score=chaos)}\n"
+            f"{t('spy_last_active', lang, date=last_active)}\n"
         )
 
         await log_spy(spy_id, target["id"], True, False)
@@ -65,7 +65,7 @@ async def execute_spy(spy_id: int, target_name: str, lang: str) -> dict:
 
         fail_text = t("spy_failed", lang, fine=format_money(fine, lang))
         if detected:
-            fail_text += "\n\n🚨 *Kamu terdeteksi!* Target mendapat notifikasi!"
+            fail_text += f"\n\n{t('spy_detected', lang)}"
 
         return {"ok": False, "text": fail_text}
 

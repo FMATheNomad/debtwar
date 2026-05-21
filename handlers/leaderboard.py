@@ -67,12 +67,12 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     await query.answer()
 
-    back_kb = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Kembali", callback_data="leaderboard_show")]])
+    back_kb = InlineKeyboardMarkup([[InlineKeyboardButton(t("menu_btn_back", lang), callback_data="leaderboard_show")]])
 
     try:
         valid = {"lb_richest", "lb_debt", "lb_chaos", "lb_chaos_detail"}
         if data not in valid:
-            await query.edit_message_text("Leaderboard gak ditemukan.", reply_markup=back_kb)
+            await query.edit_message_text(t("leaderboard_not_found", lang), reply_markup=back_kb)
             return
 
         if data == "lb_chaos_detail":
@@ -123,4 +123,4 @@ async def lb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception as e:
         logger.error(f"LB callback error: {e}")
-        await query.edit_message_text("⚠️ Error memuat leaderboard.", reply_markup=back_kb)
+        await query.edit_message_text(t("leaderboard_error", lang), reply_markup=back_kb)
